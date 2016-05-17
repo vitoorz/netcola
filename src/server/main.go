@@ -1,11 +1,19 @@
 package main
 
 import (
+	"math/rand"
+	"time"
+)
+
+import (
 	"library/idgen"
 	"library/logger"
-	"types"
+	//"types"
 )
 
 func main() {
-	logger.Info("start with first id:%v,%v", idgen.LogicObjectDummy, types.TEST)
+	logger.Info("main start")
+	rand.Seed(time.Now().UTC().Unix())
+
+	idgen.InitIDGen("1")
 }
