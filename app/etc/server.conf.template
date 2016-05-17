@@ -1,0 +1,11 @@
+# server config
+
+# ServerID should be globally unique in whole distributed system
+ServerID = 7
+
+# Following is the database ip/port which has complete config info
+ConfigDBIP = 127.0.0.1
+ConfigDBPort = 27017
+
+
+
