@@ -4,7 +4,7 @@ ProjectPath=${PWD%src}
 export GOPATH=$ProjectPath
 
 formatCode() {
-	gofmt -l -w $1
+	gofmt -l -s -w $1
 }
 
 building() {
