@@ -10,31 +10,31 @@ import (
 	"library/logger"
 )
 
-// signal handler route map
-// map key: signal in std library
-// map value: the handler chain
+// signal service
 type SignalService struct {
 	sync.Mutex
-	listenCH chan os.Signal
-	selector map[os.Signal]*signalManager
+	listenCH chan os.Signal               //chan for golang std library use
+	selector map[os.Signal]*signalManager //key: signal in std library; value: the handler chain
 }
 
+// Alloc memory for signal service
 func NewSignalService() *SignalService {
 	return &SignalService{
 		listenCH: make(chan os.Signal),
 		selector: make(map[os.Signal]*signalManager)}
 }
 
+// Start signal daemon routine
 func (s *SignalService) InitSignalService() {
 	logger.Info("signal service routine bring up")
-
 	go s.signalRoutine()
 }
 
-// register signal handler to service. when
+// Register signal handler to service
+// Register to the same signal would be executed according the register sequence
 func (s *SignalService) RegisterSignalCallback(sig os.Signal, f func(interface{}) int, d interface{}) chan int {
 
-	// 注册要监听的信号
+	// register the signal
 	signal.Notify(s.listenCH, sig)
 	logger.Info("register listening on signal:%s", sig.String())
 
@@ -63,7 +63,7 @@ func (s *SignalService) RegisterSignalCallback(sig os.Signal, f func(interface{}
 	return worker.echoChan
 }
 
-// sevice main routine
+// service daemon routine
 func (s *SignalService) signalRoutine() {
 	for {
 		sig := <-s.listenCH

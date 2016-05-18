@@ -18,10 +18,10 @@ import (
 func stopAndCleanMemory() {
 	memstat := &runtime.MemStats{}
 	runtime.ReadMemStats(memstat)
-	logger.Info("before gc:memstat.Alloc:%d M", memstat.Alloc/1024/1024)
+	logger.Info("before gc:memstat.Alloc:%d M", memstat.Alloc/1024)
 	runtime.GC()
 	runtime.ReadMemStats(memstat)
-	logger.Info("after gc:memstat.Alloc:%d M", memstat.Alloc/1024/1024)
+	logger.Info("after gc:memstat.Alloc:%d M", memstat.Alloc/1024)
 }
 
 func main() {
@@ -39,14 +39,14 @@ func main() {
 		select {
 		case sigMsg, ok := <-sigintEcho:
 			if !ok {
-				logger.Error("SIGINTecho error %t", ok)
+				logger.Error("sigint echo error %t", ok)
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
 			return
 		case sigMsg, ok := <-sigtermEcho:
 			if !ok {
-				logger.Error("SIGTERMecho error %t", ok)
+				logger.Error("sigterm echo error %t", ok)
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
