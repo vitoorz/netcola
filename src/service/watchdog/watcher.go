@@ -1,42 +1,45 @@
 package library
 
 import (
+	"library/logger"
 	"os"
-	"time"
 	"runtime"
 	"runtime/pprof"
-	"library/logger"
+	"time"
 )
 
 type Watcher struct {
-	Start   chan string
-	End     chan string
-	Objects map[string]int64 //string for object's unique identifier
-	Handler func(object string, watchedNanoSecond int64) (stopWatch bool)
+	start   chan string
+	end     chan string
+	objects map[string]int64 //string for object's unique identifier
+	handler func(object string, watchedNanoSecond int64) (stopWatch bool)
 }
 
-func NewWatcher(handler func(string, int64)(bool)) *Watcher {
+func NewWatcher(handler func(string, int64) bool) *Watcher {
 	if handler == nil {
 		handler = printPProfAfter2Second
 	}
 	w := &Watcher{
-		Start:   make(chan string),
-		End:     make(chan string),
-		Objects: make(map[string]int64),
-		Handler: handler,
+		start:   make(chan string),
+		end:     make(chan string),
+		objects: make(map[string]int64),
+		handler: handler,
 	}
 	go w.startWatchRoutine()
 
 	return w
 }
 
-
 func (w *Watcher) WatchObjStart(obj string) {
-	w.Start <- obj
+	w.start <- obj
 }
 
 func (w *Watcher) WatchObjOver(obj string) {
-	w.End <- obj
+	w.end <- obj
+}
+
+func (w *Watcher) SetWatcherHandler(handler func(string, int64) bool) {
+	w.handler = handler
 }
 
 func (w *Watcher) startWatchRoutine() {
@@ -45,20 +48,20 @@ func (w *Watcher) startWatchRoutine() {
 		select {
 		case <-tickChan:
 			curTime := time.Now().UTC().UnixNano()
-			for obj, startTime := range w.Objects {
-				if w.Handler(obj, curTime - startTime) {
-					delete(w.Objects, obj)
+			for obj, startTime := range w.objects {
+				if w.handler(obj, curTime-startTime) {
+					delete(w.objects, obj)
 				}
 			}
-		case obj, ok := <-w.Start:
+		case obj, ok := <-w.start:
 			if ok {
 				curTime := time.Now().UTC().UnixNano()
-				w.Objects[obj] = curTime
+				w.objects[obj] = curTime
 			}
 
-		case obj, ok := <-w.End:
+		case obj, ok := <-w.end:
 			if ok {
-				delete(w.Objects, obj)
+				delete(w.objects, obj)
 			}
 		}
 	}
