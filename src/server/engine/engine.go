@@ -56,7 +56,7 @@ func (eg *engineDefine) engine(pipe *netmsg.NetMsgPipe) (err interface{}) {
 				break
 			}
 			if msg.MsgType == cm.ControlMsgExit {
-				logger.Info("WorkerCtrlMsg Read %d", msg.MsgType)
+				logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)
 				eg.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 				logger.Info("engine exit")
 				return nil

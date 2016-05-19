@@ -19,10 +19,10 @@ import (
 func stopAndCleanMemory() {
 	memstat := &runtime.MemStats{}
 	runtime.ReadMemStats(memstat)
-	logger.Info("before gc:memstat.Alloc:%d M", memstat.Alloc/1024)
+	logger.Info("before gc:memstat.Alloc:%d K", memstat.Alloc/1024)
 	runtime.GC()
 	runtime.ReadMemStats(memstat)
-	logger.Info("after gc:memstat.Alloc:%d M", memstat.Alloc/1024)
+	logger.Info("after gc:memstat.Alloc:%d K", memstat.Alloc/1024)
 }
 
 func main() {
@@ -57,8 +57,8 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
-            ekey.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-            <-ekey.Echo
+			ekey.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			<-ekey.Echo
 			return
 		}
 	}
