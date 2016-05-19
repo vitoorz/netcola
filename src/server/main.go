@@ -29,8 +29,8 @@ func main() {
 
 	idgen.InitIDGen("1")
 
-	sigintEcho := support.RegistorSignalHandler(os.Interrupt, InterruptHandler, nil)
-	sigtermEcho := support.RegistorSignalHandler(syscall.SIGTERM, SIGTERMHandler, nil)
+	sigintEcho := support.RegisterSignalHandler(os.Interrupt, InterruptHandler, nil)
+	sigtermEcho := support.RegisterSignalHandler(syscall.SIGTERM, SIGTERMHandler, nil)
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 

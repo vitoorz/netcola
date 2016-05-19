@@ -1,12 +1,8 @@
 package structenh
 
 import (
-	"reflect"
 	"fmt"
-)
-
-const (
-
+	"reflect"
 )
 
 func ValueEqual(src, des interface{}) bool {

@@ -11,4 +11,3 @@ func TestValueEqual(t *testing.T) {
 		t.Errorf("\n%s\n--not equal--\n%s", Stringify(cpy), Stringify(testData))
 	}
 }
-

@@ -143,5 +143,3 @@ func (p *Parser) ParseAsOneRecord(line string, fieldIndex map[string]int, record
 
 	return nil
 }
-
-

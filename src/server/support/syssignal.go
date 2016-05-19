@@ -12,6 +12,6 @@ func init() {
 	signalService.InitSignalService()
 }
 
-func RegistorSignalHandler(sig os.Signal, f func(interface{}) int, d interface{}) chan int {
+func RegisterSignalHandler(sig os.Signal, f func(interface{}) int, d interface{}) chan int {
 	return signalService.RegisterSignalCallback(sig, f, d)
 }
