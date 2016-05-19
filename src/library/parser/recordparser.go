@@ -119,7 +119,7 @@ func (p *Parser) ParseAsOneRecord(line string, fieldIndex map[string]int, record
 			err := errors.New(fmt.Sprintf("parse: can not find field parser for field %v", field.Type))
 			if p.PanicOnError {
 				panic(err.Error())
-				return e
+				return err
 			}
 			continue
 		}
