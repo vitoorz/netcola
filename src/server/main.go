@@ -9,8 +9,10 @@ import (
 )
 
 import (
+	cm "library/controlmsg"
 	"library/idgen"
 	"library/logger"
+	"server/engine"
 	"server/support"
 )
 
@@ -34,6 +36,10 @@ func main() {
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 
+	e := engine.NewEngineDefine()
+	e.StartEngine(support.NetPipe)
+	ekey := e.ControlEntry()
+
 	for {
 		select {
 		case sigMsg, ok := <-sigintEcho:
@@ -42,6 +48,8 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
+			ekey.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			<-ekey.Echo
 			return
 		case sigMsg, ok := <-sigtermEcho:
 			if !ok {
@@ -49,6 +57,8 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
+            ekey.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+            <-ekey.Echo
 			return
 		}
 	}

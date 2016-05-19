@@ -3,6 +3,7 @@ package logger
 import (
 	"log"
 	"os"
+	"runtime"
 )
 
 const (
@@ -44,5 +45,13 @@ func Fatal(format string, args ...interface{}) {
 }
 
 func Stack() {
-
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, false)
+		if n < len(buf) {
+			break
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+	l.Printf(info + string(buf))
 }

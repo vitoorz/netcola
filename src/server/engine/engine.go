@@ -3,7 +3,7 @@ package engine
 import (
 	"runtime"
 	"sync"
-	"time"
+	//"time"
 )
 
 import (
@@ -19,7 +19,22 @@ type engineDefine struct {
 	State StateT
 }
 
-func (eg *engineDefine) Engine(pipe *netmsg.NetMsgPipe) (err interface{}) {
+func NewEngineDefine() *engineDefine {
+	e := &engineDefine{State: StateInit}
+	e.ControlMsgPipe = *cm.NewControlMsgPipe()
+	return e
+}
+
+func (eg *engineDefine) StartEngine(pipe *netmsg.NetMsgPipe) {
+	logger.Info("engine start running")
+	go eg.engine(pipe)
+}
+
+func (eg *engineDefine) ControlEntry() *cm.ControlMsgPipe {
+	return &eg.ControlMsgPipe
+}
+
+func (eg *engineDefine) engine(pipe *netmsg.NetMsgPipe) (err interface{}) {
 	// catch panic
 	defer func() {
 		if x := recover(); x != nil {
@@ -31,24 +46,21 @@ func (eg *engineDefine) Engine(pipe *netmsg.NetMsgPipe) (err interface{}) {
 	// lock this go-routine to a system thread
 	runtime.LockOSThread()
 
-	tickChan := time.NewTicker(time.Millisecond * 100).C
-	logger.Info("engine start running")
+	//tickChan := time.NewTicker(time.Millisecond * 100).C
+	logger.Info("engine cycle start")
 	for {
 		select {
-
-		case msg, ok := <-eg.ControlMsgPipe.Cmd:
+		case msg, ok := <-eg.Cmd:
 			if !ok {
-				logger.Info("WorkerCtrlMsg Read error %v", ok)
+				logger.Info("ControlMsgPipe.Cmd Read error")
 				break
 			}
-			if msg.MsgType == 1 {
+			if msg.MsgType == cm.ControlMsgExit {
 				logger.Info("WorkerCtrlMsg Read %d", msg.MsgType)
-				cm.ControlMsgPipe.Echo <- cm.ControlMsg{MsgType: 2}
-				logger.Info("Worker exit")
+				eg.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+				logger.Info("engine exit")
 				return nil
 			}
-		case <-tickChan:
-			break
 		}
 	}
 	return nil
