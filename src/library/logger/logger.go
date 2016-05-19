@@ -42,3 +42,7 @@ func Error(format string, args ...interface{}) {
 func Fatal(format string, args ...interface{}) {
 	l.Printf(fatal+format, args...)
 }
+
+func Stack() {
+
+}

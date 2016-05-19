@@ -5,8 +5,11 @@ type StateT int32
 
 const (
 	StateUnknown StateT = 0
-	StateOK           = 1
-	StateError        = 2
+	StateOK             = 1
+	StateError          = 2
+	StateRunning        = 3
+	StateStop           = 4
+	StateStart          = 5
 )
 
 //unix timestamp
