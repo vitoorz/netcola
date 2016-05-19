@@ -2,23 +2,25 @@ package main
 
 import (
 	"math/rand"
+	"os"
 	"runtime"
+	"syscall"
 	"time"
 )
 
 import (
 	"library/idgen"
 	"library/logger"
-	//"types"
+	"server/support"
 )
 
 func stopAndCleanMemory() {
 	memstat := &runtime.MemStats{}
 	runtime.ReadMemStats(memstat)
-	logger.Info("before gc:memstat.Alloc:%d M", memstat.Alloc/1024/1024)
+	logger.Info("before gc:memstat.Alloc:%d M", memstat.Alloc/1024)
 	runtime.GC()
 	runtime.ReadMemStats(memstat)
-	logger.Info("after gc:memstat.Alloc:%d M", memstat.Alloc/1024/1024)
+	logger.Info("after gc:memstat.Alloc:%d M", memstat.Alloc/1024)
 }
 
 func main() {
@@ -27,6 +29,27 @@ func main() {
 
 	idgen.InitIDGen("1")
 
+	sigintEcho := support.RegistorSignalHandler(os.Interrupt, InterruptHandler, nil)
+	sigtermEcho := support.RegistorSignalHandler(syscall.SIGTERM, SIGTERMHandler, nil)
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
+
+	for {
+		select {
+		case sigMsg, ok := <-sigintEcho:
+			if !ok {
+				logger.Error("sigint echo error %t", ok)
+				continue
+			}
+			logger.Info("receive:signal echo:%v", sigMsg)
+			return
+		case sigMsg, ok := <-sigtermEcho:
+			if !ok {
+				logger.Error("sigterm echo error %t", ok)
+				continue
+			}
+			logger.Info("receive:signal echo:%v", sigMsg)
+			return
+		}
+	}
 }
