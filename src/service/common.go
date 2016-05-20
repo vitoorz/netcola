@@ -1,37 +1,30 @@
 package service
 
 import (
+	cm "library/controlmsg"
 	"library/netmsg"
 	"time"
 )
 
 const (
 	ScCmdCommonUserStub    = 0
-	ScCmdStopService       = -1
-	ScCmdSetUserCmdHandler = -2
-	ScCmdSetTickHandler    = -3
-	ScCmdOnTick            = -4
 
 	ServiceStatusNotBegin = 0
 	ServiceStatusRunning  = 1
-	ServiceStatusStoping  = 2
-	ServiceStatusStoped   = 3
+	ServiceStatusStopping  = 2
+	ServiceStatusStopped   = 3
 )
-
-type ServiceCmd struct {
-	Code    int
-	PayLoad interface{}
-}
 
 type ServiceCmdHandler func(service interface{}, code int, payLoad interface{}) (int, interface{})
 
 type ServiceCommon struct {
 	tickStepNano    int64
 	handlers        map[int]ServiceCmdHandler
-	sysCmd          chan ServiceCmd
+	sysHandlers map[int]ServiceCmdHandler
 	pipe            *netmsg.NetMsgPipe
 	status          int
 	serviceInstance interface{} //real service interface data struct pointer
+	cm.ControlMsgPipe
 }
 
 func NewServiceCommon(tickStepNano int64, pipe *netmsg.NetMsgPipe) *ServiceCommon {
@@ -41,14 +34,16 @@ func NewServiceCommon(tickStepNano int64, pipe *netmsg.NetMsgPipe) *ServiceCommo
 	if pipe == nil {
 		pipe = netmsg.NewNetMsgPipe(1, 1)
 	}
-	return &ServiceCommon{
+	sc := &ServiceCommon{
 		tickStepNano:    tickStepNano,
 		handlers:        make(map[int]ServiceCmdHandler),
-		sysCmd:          make(chan ServiceCmd),
+		sysHandlers:     make(map[int]ServiceCmdHandler),
 		pipe:            pipe,
 		status:          ServiceStatusNotBegin,
 		serviceInstance: nil,
 	}
+	sc.ControlMsgPipe = *cm.NewControlMsgPipe()
+	return sc
 }
 
 func (sc *ServiceCommon) SetRealInstance(realService interface{}) {
@@ -59,16 +54,20 @@ func (sc *ServiceCommon) Status() int {
 	return sc.status
 }
 
+func (sc *ServiceCommon) SysHandler(code int, handler ServiceCmdHandler) {
+	sc.sysHandlers[code] = handler
+}
+
+func (sc *ServiceCommon) HandleSysCmd(cmd *cm.ControlMsg) {
+	sc.Cmd <- cmd
+}
+
 func (sc *ServiceCommon) UseHandler(code int, handler ServiceCmdHandler) {
 	sc.handlers[code] = handler
 }
 
 func (sc *ServiceCommon) Handle(msg *netmsg.NetMsg) {
 	sc.pipe.WriteRecvChan(msg)
-}
-
-func (sc *ServiceCommon) HandleServiceCmd(cmd ServiceCmd) {
-	sc.sysCmd <- cmd
 }
 
 func (sc *ServiceCommon) Start(pipe *netmsg.NetMsgPipe) {
@@ -82,29 +81,41 @@ func (sc *ServiceCommon) Start(pipe *netmsg.NetMsgPipe) {
 		for sc.status == ServiceStatusRunning {
 			select {
 			case <-tickChan:
-				sc.handleCmd(ScCmdOnTick, time.Now().UnixNano())
-			case cmd, ok := <-sc.sysCmd:
+				sc.handleSysCmd(cm.ControlMsgTick, time.Now().UnixNano())
+			case cmd, ok := <-sc.Cmd:
 				if !ok {
 					continue
 				}
-				sc.handleCmd(cmd.Code, cmd.PayLoad)
+				sc.handleSysCmd(cmd.MsgType, cmd.Payload)
 			case userMsg, okUser := <-*sc.pipe.ReadRecvChan():
 				if !okUser {
 					continue
 				}
-				sc.handleCmd(userMsg.OpCode(), userMsg)
+				sc.handleUserCmd(userMsg.OpCode(), userMsg)
 			default:
 			}
 		}
-		sc.status = ServiceStatusStoped
+		sc.status = ServiceStatusStopped
 	}()
 }
 
 func (sc *ServiceCommon) Stop() {
-	sc.status = ServiceStatusStoping
+	sc.Cmd <- &cm.ControlMsg{cm.ControlMsgExit, nil}
 }
 
-func (sc *ServiceCommon) handleCmd(code int, payLoad interface{}) (int, interface{}) {
+func (sc *ServiceCommon) handleSysCmd(code int, payLoad interface{}) (int, interface{}) {
+	if code == cm.ControlMsgExit {
+		sc.status = ServiceStatusStopping
+	}
+
+	handler, ok := sc.sysHandlers[code]
+	if !ok {
+		return 0, nil
+	}
+	return handler(sc.serviceInstance, code, payLoad)
+}
+
+func (sc *ServiceCommon) handleUserCmd(code int, payLoad interface{}) (int, interface{}) {
 	handler, ok := sc.handlers[code]
 	if !ok && code >= 0 {
 		if handler, ok = sc.handlers[ScCmdCommonUserStub]; !ok {

@@ -2,6 +2,8 @@ package controlmsg
 
 const (
 	ControlMsgExit = iota
+	ControlMsgTick
+	ControlMsgMax
 )
 
 type ControlMsg struct {

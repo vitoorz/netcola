@@ -28,7 +28,7 @@ func TestWatcher(t *testing.T) {
 	}
 	w.Stop()
 	time.Sleep(1 * time.Second)
-	if w.Status() != service.ServiceStatusStoped {
+	if w.Status() != service.ServiceStatusStopped {
 		t.Errorf("should be running: %s", w.Status())
 	}
 	t.Logf("%v", w)

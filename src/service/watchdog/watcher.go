@@ -2,6 +2,7 @@ package watchdog
 
 import (
 	"library/logger"
+	cm "library/controlmsg"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -9,11 +10,11 @@ import (
 	"time"
 )
 
+//should have no overlap with pre-defined control message type
 const (
-	watchCmdStartWatch         = 1
-	watchCmdEndWatch           = 2
-	watchCmdSetPassTickHandler = 3
-	watchCmdStopWatcher        = 4
+	watchCmdStartWatch         = cm.ControlMsgMax + iota
+	watchCmdEndWatch
+	watchCmdSetPassTickHandler
 )
 
 type PassTickHandler func(object string, watchedNanoSecond int64) (stopWatch bool)
@@ -35,25 +36,24 @@ func NewWatcher() *Watcher {
 
 	w.service = s
 
-	w.service.UseHandler(ScCmdOnTick, handleOnTick)
-	w.service.UseHandler(watchCmdSetPassTickHandler, handleWatchSetPassTickHandler)
-	w.service.UseHandler(watchCmdStartWatch, handleWatchStart)
-	w.service.UseHandler(watchCmdEndWatch, handleWatchEnd)
-	w.service.UseHandler(watchCmdStopWatcher, handleStopWatcher)
+	w.service.SysHandler(cm.ControlMsgTick, handleOnTick)
+	w.service.SysHandler(watchCmdSetPassTickHandler, handleWatchSetPassTickHandler)
+	w.service.SysHandler(watchCmdStartWatch, handleWatchStart)
+	w.service.SysHandler(watchCmdEndWatch, handleWatchEnd)
 
 	return w
 }
 
 func (w *Watcher) WatchObjStart(obj string) {
-	w.service.HandleServiceCmd(ServiceCmd{watchCmdStartWatch, obj})
+	w.service.HandleSysCmd(&cm.ControlMsg{watchCmdStartWatch, obj})
 }
 
 func (w *Watcher) WatchObjOver(obj string) {
-	w.service.HandleServiceCmd(ServiceCmd{watchCmdEndWatch, obj})
+	w.service.HandleSysCmd(&cm.ControlMsg{watchCmdEndWatch, obj})
 }
 
 func (w *Watcher) SetWatcherHandler(obj PassTickHandler) {
-	w.service.HandleServiceCmd(ServiceCmd{watchCmdSetPassTickHandler, obj})
+	w.service.HandleSysCmd(&cm.ControlMsg{watchCmdSetPassTickHandler, obj})
 }
 
 func (w *Watcher) Start() {
@@ -61,7 +61,7 @@ func (w *Watcher) Start() {
 }
 
 func (w *Watcher) Stop() {
-	w.service.HandleServiceCmd(ServiceCmd{watchCmdStopWatcher, nil})
+	w.service.Stop()
 }
 
 func (w *Watcher) Status() int {
@@ -83,12 +83,6 @@ func handleWatchStart(ws interface{}, code int, object interface{}) (int, interf
 func handleWatchEnd(ws interface{}, code int, object interface{}) (int, interface{}) {
 	w := ws.(*Watcher)
 	delete(w.objects, object.(string))
-	return 0, nil
-}
-
-func handleStopWatcher(ws interface{}, code int, object interface{}) (int, interface{}) {
-	w := ws.(*Watcher)
-	w.Stop()
 	return 0, nil
 }
 
