@@ -9,7 +9,7 @@ const (
 	StateError          = 2
 	StateRunning        = 3
 	StateStop           = 4
-	StateStart          = 5
+	StateInit           = 5
 )
 
 //unix timestamp
