@@ -1,70 +1,108 @@
-package library
+package watchdog
 
 import (
 	"library/logger"
 	"os"
 	"runtime"
 	"runtime/pprof"
+	. "service"
 	"time"
 )
 
+const (
+	watchCmdStartWatch         = 1
+	watchCmdEndWatch           = 2
+	watchCmdSetPassTickHandler = 3
+	watchCmdStopWatcher        = 4
+)
+
+type PassTickHandler func(object string, watchedNanoSecond int64) (stopWatch bool)
+
 type Watcher struct {
-	start   chan string
-	end     chan string
-	objects map[string]int64 //string for object's unique identifier
-	handler func(object string, watchedNanoSecond int64) (stopWatch bool)
+	service         *ServiceCommon
+	objects         map[string]int64
+	passTickHandler PassTickHandler
 }
 
-func NewWatcher(handler func(string, int64) bool) *Watcher {
-	if handler == nil {
-		handler = printPProfAfter2Second
-	}
+func NewWatcher() *Watcher {
 	w := &Watcher{
-		start:   make(chan string),
-		end:     make(chan string),
-		objects: make(map[string]int64),
-		handler: handler,
+		objects:         make(map[string]int64),
+		passTickHandler: printPProfAfter2Second,
 	}
-	go w.startWatchRoutine()
+
+	s := NewServiceCommon(1e9, nil)
+	s.SetRealInstance(w)
+
+	w.service = s
+
+	w.service.UseHandler(ScCmdOnTick, handleOnTick)
+	w.service.UseHandler(watchCmdSetPassTickHandler, handleWatchSetPassTickHandler)
+	w.service.UseHandler(watchCmdStartWatch, handleWatchStart)
+	w.service.UseHandler(watchCmdEndWatch, handleWatchEnd)
+	w.service.UseHandler(watchCmdStopWatcher, handleStopWatcher)
 
 	return w
 }
 
 func (w *Watcher) WatchObjStart(obj string) {
-	w.start <- obj
+	w.service.HandleServiceCmd(ServiceCmd{watchCmdStartWatch, obj})
 }
 
 func (w *Watcher) WatchObjOver(obj string) {
-	w.end <- obj
+	w.service.HandleServiceCmd(ServiceCmd{watchCmdEndWatch, obj})
 }
 
-func (w *Watcher) SetWatcherHandler(handler func(string, int64) bool) {
-	w.handler = handler
+func (w *Watcher) SetWatcherHandler(obj PassTickHandler) {
+	w.service.HandleServiceCmd(ServiceCmd{watchCmdSetPassTickHandler, obj})
 }
 
-func (w *Watcher) startWatchRoutine() {
-	tickChan := time.NewTicker(time.Second).C
-	for {
-		select {
-		case <-tickChan:
-			curTime := time.Now().UTC().UnixNano()
-			for obj, startTime := range w.objects {
-				if w.handler(obj, curTime-startTime) {
-					delete(w.objects, obj)
-				}
-			}
-		case obj, ok := <-w.start:
-			if ok {
-				curTime := time.Now().UTC().UnixNano()
-				w.objects[obj] = curTime
-			}
+func (w *Watcher) Start() {
+	w.service.Start(nil)
+}
 
-		case obj, ok := <-w.end:
-			if ok {
-				delete(w.objects, obj)
-			}
+func (w *Watcher) Stop() {
+	w.service.HandleServiceCmd(ServiceCmd{watchCmdStopWatcher, nil})
+}
+
+func (w *Watcher) Status() int {
+	return w.service.Status()
+}
+
+func handleWatchSetPassTickHandler(ws interface{}, code int, object interface{}) (int, interface{}) {
+	w := ws.(*Watcher)
+	w.passTickHandler = object.(PassTickHandler)
+	return 0, nil
+}
+
+func handleWatchStart(ws interface{}, code int, object interface{}) (int, interface{}) {
+	w := ws.(*Watcher)
+	w.objects[object.(string)] = time.Now().UnixNano()
+	return 0, nil
+}
+
+func handleWatchEnd(ws interface{}, code int, object interface{}) (int, interface{}) {
+	w := ws.(*Watcher)
+	delete(w.objects, object.(string))
+	return 0, nil
+}
+
+func handleStopWatcher(ws interface{}, code int, object interface{}) (int, interface{}) {
+	w := ws.(*Watcher)
+	w.Stop()
+	return 0, nil
+}
+
+func handleOnTick(ws interface{}, code int, data interface{}) (int, interface{}) {
+	w := ws.(*Watcher)
+
+	curTime := time.Now().UTC().UnixNano()
+	for obj, startTime := range w.objects {
+		if w.passTickHandler(obj, curTime-startTime) {
+			delete(w.objects, obj)
 		}
 	}
+
+	return 0, nil
 }
 
 func printPProfAfter2Second(object string, nanoSecond int64) bool {
