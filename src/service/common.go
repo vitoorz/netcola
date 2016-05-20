@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	ScCmdCommonUserStub    = 0
+	ScCmdCommonUserStub = 0
 
 	ServiceStatusNotBegin = 0
 	ServiceStatusRunning  = 1
-	ServiceStatusStopping  = 2
-	ServiceStatusStopped   = 3
+	ServiceStatusStopping = 2
+	ServiceStatusStopped  = 3
 )
 
 type ServiceCmdHandler func(service interface{}, code int, payLoad interface{}) (int, interface{})
@@ -20,7 +20,7 @@ type ServiceCmdHandler func(service interface{}, code int, payLoad interface{}) 
 type ServiceCommon struct {
 	tickStepNano    int64
 	handlers        map[int]ServiceCmdHandler
-	sysHandlers map[int]ServiceCmdHandler
+	sysHandlers     map[int]ServiceCmdHandler
 	pipe            *netmsg.NetMsgPipe
 	status          int
 	serviceInstance interface{} //real service interface data struct pointer

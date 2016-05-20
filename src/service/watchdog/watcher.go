@@ -1,8 +1,8 @@
 package watchdog
 
 import (
-	"library/logger"
 	cm "library/controlmsg"
+	"library/logger"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -12,7 +12,7 @@ import (
 
 //should have no overlap with pre-defined control message type
 const (
-	watchCmdStartWatch         = cm.ControlMsgMax + iota
+	watchCmdStartWatch = cm.ControlMsgMax + iota
 	watchCmdEndWatch
 	watchCmdSetPassTickHandler
 )
