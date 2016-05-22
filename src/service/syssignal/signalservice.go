@@ -7,21 +7,25 @@ import (
 )
 
 import (
+	cm "library/core/controlmsg"
 	"library/logger"
 )
 
 // signal service
 type SignalService struct {
 	sync.Mutex
+	cm.ControlMsgPipe
 	listenCH chan os.Signal               //chan for golang std library use
 	selector map[os.Signal]*signalManager //key: signal in std library; value: the handler chain
 }
 
 // Alloc memory for signal service
 func NewSignalService() *SignalService {
-	return &SignalService{
+	s := &SignalService{
 		listenCH: make(chan os.Signal),
 		selector: make(map[os.Signal]*signalManager)}
+	s.ControlMsgPipe = *cm.NewControlMsgPipe()
+	return s
 }
 
 // Start signal daemon routine
@@ -30,9 +34,17 @@ func (s *SignalService) InitSignalService() {
 	go s.signalRoutine()
 }
 
+// Start signal daemon routine
+func (s *SignalService) Exit() {
+	//todo:
+	// 1. unregister all the signals
+	// 2. recycle the memory use in service
+}
+
 // Register signal handler to service
 // Register to the same signal would be executed according the register sequence
-func (s *SignalService) RegisterSignalCallback(sig os.Signal, f func(interface{}) int, d interface{}) chan int {
+func (s *SignalService) RegisterSignalCallback(
+	sig os.Signal, f func(interface{}) *cm.ControlMsg, d interface{}) {
 
 	// register the signal
 	signal.Notify(s.listenCH, sig)
@@ -44,23 +56,22 @@ func (s *SignalService) RegisterSignalCallback(sig os.Signal, f func(interface{}
 	_, ok := s.selector[sig]
 	if !ok {
 		s.selector[sig] = &signalManager{
+			c:           &s.ControlMsgPipe,
 			sig:         sig,
 			workerChain: make([]*signalWorker, 0),
 		}
 	}
 
 	worker := &signalWorker{
-		data:     d,
-		handler:  f,
-		echoChan: make(chan int),
+		data:    d,
+		handler: f,
 	}
 
 	mgr := s.selector[sig]
 	mgr.Lock()
 	mgr.workerChain = append(mgr.workerChain, worker)
 	mgr.Unlock()
-
-	return worker.echoChan
+	return
 }
 
 // service daemon routine

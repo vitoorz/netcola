@@ -1,24 +1,25 @@
 package syssignal
 
 import (
+	cm "library/core/controlmsg"
 	"os"
 	"syscall"
 	"testing"
 )
 
-func InterruptHandler1(i interface{}) int {
+func InterruptHandler1(i interface{}) *cm.ControlMsg {
 	n := i.(int)
-	return n
+	return &cm.ControlMsg{MsgType: n}
 }
 
-func InterruptHandler3(i interface{}) int {
+func InterruptHandler3(i interface{}) *cm.ControlMsg {
 	n := i.(int)
-	return n
+	return &cm.ControlMsg{MsgType: n}
 }
 
-func eq(re chan int, exp int) bool {
-	renum := <-re
-	if renum == exp {
+func eq(s *SignalService, exp int) bool {
+	re := <-s.Echo
+	if re.MsgType == exp {
 		return true
 	} else {
 		return false
@@ -26,18 +27,21 @@ func eq(re chan int, exp int) bool {
 }
 
 // Test signal service.
+// todo: do some parallel test
 func TestSignal(t *testing.T) {
 
 	var signalService *SignalService = NewSignalService()
 	signalService.InitSignalService()
 
-	echo1 := signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler1, 11)
-	echo2 := signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler1, 12)
-	echo3 := signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler3, 13)
+	signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler1, 11)
+	signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler1, 12)
+	signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler3, 13)
 
 	t.Logf("test sigint...")
 	syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-	if !(eq(echo1, 11) && eq(echo2, 12) && eq(echo3, 13)) {
+	if !(eq(signalService, 11) &&
+		eq(signalService, 12) &&
+		eq(signalService, 13)) {
 		t.Error("sigint test failed")
 	}
 }

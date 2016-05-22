@@ -1,17 +1,18 @@
 package support
 
 import (
+	cm "library/core/controlmsg"
 	"os"
 	sig "service/syssignal"
 )
 
-var signalService *sig.SignalService = nil
+var SignalService *sig.SignalService = nil
 
 func init() {
-	signalService = sig.NewSignalService()
-	signalService.InitSignalService()
+	SignalService = sig.NewSignalService()
+	SignalService.InitSignalService()
 }
 
-func RegisterSignalHandler(sig os.Signal, f func(interface{}) int, d interface{}) chan int {
-	return signalService.RegisterSignalCallback(sig, f, d)
+func RegisterSignalHandler(sig os.Signal, f func(interface{}) *cm.ControlMsg, d interface{}) {
+	SignalService.RegisterSignalCallback(sig, f, d)
 }

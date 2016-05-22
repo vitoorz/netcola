@@ -1,7 +1,7 @@
 package watchdog
 
 import (
-	cm "library/controlmsg"
+	cm "library/core/controlmsg"
 	"library/logger"
 	"os"
 	"runtime"

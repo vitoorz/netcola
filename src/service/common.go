@@ -1,7 +1,7 @@
 package service
 
 import (
-	cm "library/controlmsg"
+	cm "library/core/controlmsg"
 	"library/netmsg"
 	"time"
 )
