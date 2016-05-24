@@ -4,4 +4,4 @@ import (
 	dm "library/core/datamsg"
 )
 
-var NetPipe *dm.DataMsgPipe = dm.NewNetMsgPipe(0, 0)
+var NetPipe *dm.DataMsgPipe = dm.NewDataMsgPipe(0, 0)

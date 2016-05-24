@@ -34,7 +34,7 @@ func (eg *engineDefine) ControlEntry() *cm.ControlMsgPipe {
 	return &eg.ControlMsgPipe
 }
 
-func (eg *engineDefine) engine(pipe *dm.DataMsgPipe) (err interface{}) {
+func (eg *engineDefine) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 	// catch panic
 	defer func() {
 		if x := recover(); x != nil {
@@ -50,6 +50,12 @@ func (eg *engineDefine) engine(pipe *dm.DataMsgPipe) (err interface{}) {
 	logger.Info("engine cycle start")
 	for {
 		select {
+		case msg, ok := <-datapipe.ReadRecvChan():
+			if !ok {
+				logger.Info("ReadRecvChan Read error")
+				break
+			}
+			logger.Info("recv data:%+v", msg)
 		case msg, ok := <-eg.Cmd:
 			if !ok {
 				logger.Info("ControlMsgPipe.Cmd Read error")

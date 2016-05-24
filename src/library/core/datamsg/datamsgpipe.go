@@ -9,7 +9,7 @@ type DataMsgPipe struct {
 	recv chan *DataMsg
 }
 
-func NewNetMsgPipe(sendSize, recvSize int) *DataMsgPipe {
+func NewDataMsgPipe(sendSize, recvSize int) *DataMsgPipe {
 	var pipe = &DataMsgPipe{}
 	sendPipeLen := 1024
 	recvPipeLen := 1024
@@ -24,11 +24,11 @@ func NewNetMsgPipe(sendSize, recvSize int) *DataMsgPipe {
 	return pipe
 }
 
-func (p *DataMsgPipe) ReadRecvChan() *chan *DataMsg {
-	return &p.recv
+func (p *DataMsgPipe) ReadRecvChan() chan *DataMsg {
+	return p.recv
 }
 
-func (p *DataMsgPipe) WriteRecvChan(msg *DataMsg) {
+func (p *DataMsgPipe) WriteRecvChanNB(msg *DataMsg) {
 	select {
 	case p.recv <- msg:
 	default:
@@ -37,11 +37,11 @@ func (p *DataMsgPipe) WriteRecvChan(msg *DataMsg) {
 
 }
 
-func (p *DataMsgPipe) ReadSendChan() *chan *DataMsg {
-	return &p.send
+func (p *DataMsgPipe) ReadSendChan() chan *DataMsg {
+	return p.send
 }
 
-func (p *DataMsgPipe) WriteSendChan(msg *DataMsg) {
+func (p *DataMsgPipe) WriteSendChanNB(msg *DataMsg) {
 	select {
 	case p.send <- msg:
 	default:

@@ -2,7 +2,7 @@ package service
 
 import (
 	cm "library/core/controlmsg"
-	"library/netmsg"
+	dm "library/core/datamsg"
 	"time"
 )
 
@@ -21,18 +21,18 @@ type ServiceCommon struct {
 	tickStepNano    int64
 	handlers        map[int]ServiceCmdHandler
 	sysHandlers     map[int]ServiceCmdHandler
-	pipe            *netmsg.NetMsgPipe
+	pipe            *dm.DataMsgPipe
 	status          int
 	serviceInstance interface{} //real service interface data struct pointer
 	cm.ControlMsgPipe
 }
 
-func NewServiceCommon(tickStepNano int64, pipe *netmsg.NetMsgPipe) *ServiceCommon {
+func NewServiceCommon(tickStepNano int64, pipe *dm.DataMsgPipe) *ServiceCommon {
 	if tickStepNano < 1e7 { //10ms at lease
 		tickStepNano = 1e7
 	}
 	if pipe == nil {
-		pipe = netmsg.NewNetMsgPipe(1, 1)
+		pipe = dm.NewDataMsgPipe(1, 1)
 	}
 	sc := &ServiceCommon{
 		tickStepNano:    tickStepNano,
@@ -66,11 +66,11 @@ func (sc *ServiceCommon) UseHandler(code int, handler ServiceCmdHandler) {
 	sc.handlers[code] = handler
 }
 
-func (sc *ServiceCommon) Handle(msg *netmsg.NetMsg) {
+func (sc *ServiceCommon) Handle(msg *dm.DataMsg) {
 	sc.pipe.WriteRecvChan(msg)
 }
 
-func (sc *ServiceCommon) Start(pipe *netmsg.NetMsgPipe) {
+func (sc *ServiceCommon) Start(pipe *dm.DataMsgPipe) {
 	if pipe != nil {
 		sc.pipe = pipe
 	}
