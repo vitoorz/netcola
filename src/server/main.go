@@ -10,10 +10,11 @@ import (
 
 import (
 	cm "library/core/controlmsg"
+	dm "library/core/datamsg"
 	"library/idgen"
 	"library/logger"
-	"server/engine"
 	"server/support"
+	"service/engine"
 )
 
 func stopAndCleanMemory() {
@@ -36,7 +37,8 @@ func main() {
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 
-	e := engine.NewEngineDefine()
+	bus := dm.NewDataMsgPipe(0, 0)
+	e := engine.NewEngineDefine(bus)
 	e.StartEngine(support.NetPipe)
 	ekey := e.ControlEntry()
 

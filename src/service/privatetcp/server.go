@@ -3,7 +3,6 @@ package privatetcp
 import (
 	"io"
 	"net"
-	"sync"
 )
 
 import (
@@ -13,18 +12,24 @@ import (
 import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
+	svc "service/core"
 )
 
 type PrivateTCPServer struct {
-	Lock sync.RWMutex
-	cm.ControlMsgPipe
-	BUS *dm.DataMsgPipe
-
-	ID       uint64
+	svc.Service
 	Listener *net.TCPListener
 	Conn     *net.TCPConn
 	IP       string
 	Port     string
+}
+
+func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
+	t := &PrivateTCPServer{}
+	t.Service = *svc.NewService("")
+	t.State = svc.StateInit
+	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.BUS = bus
+	return t
 }
 
 func (t *PrivateTCPServer) OnInit(bus *dm.DataMsgPipe) bool {
@@ -63,5 +68,10 @@ func (t *PrivateTCPServer) serve() {
 		if err != nil {
 			logger.Warn("read byte:%d,error:%s", n, err.Error())
 		}
+		logger.Debug("read byte:%+v", data)
 	}
+}
+
+func (t *PrivateTCPServer) OnExit() {
+
 }

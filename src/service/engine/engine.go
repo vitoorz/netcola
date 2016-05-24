@@ -2,39 +2,38 @@ package engine
 
 import (
 	"runtime"
-	"sync"
-	//"time"
 )
 
 import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
-	. "types"
+	svc "service/core"
 )
 
-type engineDefine struct {
-	sync.Mutex
-	cm.ControlMsgPipe
-	State StateT
+type engineT struct {
+	svc.Service
 }
 
-func NewEngineDefine() *engineDefine {
-	e := &engineDefine{State: StateInit}
-	e.ControlMsgPipe = *cm.NewControlMsgPipe()
-	return e
+func NewEngineDefine(bus *dm.DataMsgPipe) *engineT {
+	t := &engineT{}
+	t.Service = *svc.NewService("")
+	t.State = svc.StateInit
+	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.BUS = bus
+	return t
 }
 
-func (eg *engineDefine) StartEngine(pipe *dm.DataMsgPipe) {
+func (t *engineT) StartEngine(pipe *dm.DataMsgPipe) {
 	logger.Info("engine start running")
-	go eg.engine(pipe)
+	go t.engine(pipe)
 }
 
-func (eg *engineDefine) ControlEntry() *cm.ControlMsgPipe {
-	return &eg.ControlMsgPipe
+func (t *engineT) ControlEntry() *cm.ControlMsgPipe {
+	return &t.ControlMsgPipe
 }
 
-func (eg *engineDefine) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
+func (t *engineT) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 	// catch panic
 	defer func() {
 		if x := recover(); x != nil {
@@ -56,14 +55,14 @@ func (eg *engineDefine) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 				break
 			}
 			logger.Info("recv data:%+v", msg)
-		case msg, ok := <-eg.Cmd:
+		case msg, ok := <-t.Cmd:
 			if !ok {
 				logger.Info("ControlMsgPipe.Cmd Read error")
 				break
 			}
 			if msg.MsgType == cm.ControlMsgExit {
 				logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)
-				eg.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+				t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 				logger.Info("engine exit")
 				return nil
 			}
