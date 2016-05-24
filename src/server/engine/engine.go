@@ -8,8 +8,8 @@ import (
 
 import (
 	cm "library/core/controlmsg"
+	"library/datamsg"
 	"library/logger"
-	"library/netmsg"
 	. "types"
 )
 
@@ -25,7 +25,7 @@ func NewEngineDefine() *engineDefine {
 	return e
 }
 
-func (eg *engineDefine) StartEngine(pipe *netmsg.NetMsgPipe) {
+func (eg *engineDefine) StartEngine(pipe *datamsg.DataMsgPipe) {
 	logger.Info("engine start running")
 	go eg.engine(pipe)
 }
@@ -34,7 +34,7 @@ func (eg *engineDefine) ControlEntry() *cm.ControlMsgPipe {
 	return &eg.ControlMsgPipe
 }
 
-func (eg *engineDefine) engine(pipe *netmsg.NetMsgPipe) (err interface{}) {
+func (eg *engineDefine) engine(pipe *datamsg.DataMsgPipe) (err interface{}) {
 	// catch panic
 	defer func() {
 		if x := recover(); x != nil {

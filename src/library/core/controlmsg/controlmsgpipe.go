@@ -12,7 +12,45 @@ func NewControlMsgPipe() *ControlMsgPipe {
 	return new
 }
 
-func (n *ControlMsgPipe) CloseControlMsgPipe() {
-	close(n.Cmd)
-	close(n.Echo)
+func (p *ControlMsgPipe) CloseControlMsgPipe() {
+	close(p.Cmd)
+	close(p.Echo)
+}
+
+func (p *ControlMsgPipe) ReadEchoNonblock() (*ControlMsg, bool) {
+	var msg *ControlMsg = nil
+	select {
+	case msg = <-p.Echo:
+		return msg, true
+	default:
+	}
+	return nil, false
+}
+
+func (p *ControlMsgPipe) WriteEchoNonblock(msg *ControlMsg) bool {
+	select {
+	case p.Echo <- msg:
+		return true
+	default:
+	}
+	return false
+}
+
+func (p *ControlMsgPipe) ReadCmdNonblock() (*ControlMsg, bool) {
+	var msg *ControlMsg = nil
+	select {
+	case msg = <-p.Cmd:
+		return msg, true
+	default:
+	}
+	return nil, false
+}
+
+func (p *ControlMsgPipe) WriteCmdNonblock(msg *ControlMsg) bool {
+	select {
+	case p.Cmd <- msg:
+		return true
+	default:
+	}
+	return false
 }
