@@ -5,51 +5,51 @@ import (
 )
 
 type DataMsgPipe struct {
-	send chan *DataMsg
-	recv chan *DataMsg
+	Up   chan *DataMsg
+	Down chan *DataMsg
 }
 
-func NewDataMsgPipe(sendSize, recvSize int) *DataMsgPipe {
+func NewDataMsgPipe(upSize, downSize int) *DataMsgPipe {
 	var pipe = &DataMsgPipe{}
-	sendPipeLen := 1024
-	recvPipeLen := 1024
-	if sendSize >= 1 {
-		sendPipeLen = sendSize
+	upPipeLen := 1024
+	downPipeLen := 1024
+	if upSize >= 1 {
+		upPipeLen = upSize
 	}
-	if recvSize >= 1 {
-		recvPipeLen = recvSize
+	if downSize >= 1 {
+		downPipeLen = downSize
 	}
-	pipe.send = make(chan *DataMsg, sendPipeLen)
-	pipe.recv = make(chan *DataMsg, recvPipeLen)
+	pipe.Up = make(chan *DataMsg, upPipeLen)
+	pipe.Down = make(chan *DataMsg, downPipeLen)
 	return pipe
 }
 
-func (p *DataMsgPipe) ReadRecvChan() chan *DataMsg {
-	return p.recv
+func (p *DataMsgPipe) ReadDownChan() chan *DataMsg {
+	return p.Down
 }
 
-func (p *DataMsgPipe) WriteRecvChanNB(msg *DataMsg) {
+func (p *DataMsgPipe) WriteDownChanNB(msg *DataMsg) {
 	select {
-	case p.recv <- msg:
+	case p.Down <- msg:
 	default:
-		logger.Warn("Recv chan overflow, need write to disk queue")
+		logger.Warn("down chan overflow, may need to write to buffer")
 	}
 
 }
 
-func (p *DataMsgPipe) ReadSendChan() chan *DataMsg {
-	return p.send
+func (p *DataMsgPipe) ReadUpChan() chan *DataMsg {
+	return p.Up
 }
 
-func (p *DataMsgPipe) WriteSendChanNB(msg *DataMsg) {
+func (p *DataMsgPipe) WriteUpChanNB(msg *DataMsg) {
 	select {
-	case p.send <- msg:
+	case p.Up <- msg:
 	default:
-		logger.Warn("WriteSendChan overflow, need write to disk queue")
+		logger.Warn("up chan overflow, may need to write to buffer")
 	}
 
 }
 
 func (p *DataMsgPipe) Length() (int, int) {
-	return len(p.send), len(p.recv)
+	return len(p.Up), len(p.Down)
 }

@@ -12,11 +12,12 @@ import (
 import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
-	svc "service/core"
+	"service"
+	"time"
 )
 
 type PrivateTCPServer struct {
-	svc.Service
+	service.Service
 	Listener *net.TCPListener
 	Conn     *net.TCPConn
 	IP       string
@@ -25,16 +26,17 @@ type PrivateTCPServer struct {
 
 func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
 	t := &PrivateTCPServer{}
-	t.Service = *svc.NewService("")
-	t.State = svc.StateInit
+	t.Service = *service.NewService("")
+	t.State = service.StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.IP = "0.0.0.0"
+	t.Port = "7171"
 	t.BUS = bus
 	return t
 }
 
-func (t *PrivateTCPServer) OnInit(bus *dm.DataMsgPipe) bool {
+func (t *PrivateTCPServer) Init() bool {
 	logger.Info("Start PrivateTCPServer")
-	t.BUS = bus
 	tcpAddr, err := net.ResolveTCPAddr("tcp", t.IP+":"+t.Port)
 	if err != nil {
 		logger.Error("net.ResolveTCPAddr error,%s", err.Error())
@@ -48,30 +50,46 @@ func (t *PrivateTCPServer) OnInit(bus *dm.DataMsgPipe) bool {
 	}
 
 	logger.Info("listening port:%s", t.Port)
+	return true
+}
 
-	for {
-		t.Conn, err = t.Listener.AcceptTCP()
-		if err != nil {
-			logger.Error("listener.AcceptTCP error,%s", err.Error())
-			continue
+func (t *PrivateTCPServer) Start() bool {
+	var err error = nil
+	go func() {
+		for {
+			t.Conn, err = t.Listener.AcceptTCP()
+			if err != nil {
+				logger.Error("listener.AcceptTCP error,%s", err.Error())
+				time.Sleep(time.Second * 2)
+				continue
+			}
+			go t.serve()
+
+			//t.Conn.Close()
 		}
-		go t.serve()
-	}
+	}()
+	return true
+}
 
+func (t *PrivateTCPServer) Pause() bool {
+	return true
+}
+
+func (t *PrivateTCPServer) Exit() bool {
+	return true
+}
+
+func (t *PrivateTCPServer) Kill() bool {
 	return true
 }
 
 func (t *PrivateTCPServer) serve() {
 	for {
-		data := make([]byte, 2)
-		n, err := io.ReadAtLeast(t.Conn, data, 2)
+		data := make([]byte, 1)
+		n, err := io.ReadAtLeast(t.Conn, data, 1)
 		if err != nil {
 			logger.Warn("read byte:%d,error:%s", n, err.Error())
 		}
-		logger.Debug("read byte:%+v", data)
+		logger.Debug("read %d byte:%+v", n, data)
 	}
-}
-
-func (t *PrivateTCPServer) OnExit() {
-
 }

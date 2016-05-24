@@ -67,7 +67,7 @@ func (sc *ServiceCommon) UseHandler(code int, handler ServiceCmdHandler) {
 }
 
 func (sc *ServiceCommon) Handle(msg *dm.DataMsg) {
-	sc.pipe.WriteRecvChan(msg)
+	sc.pipe.WriteDownChanNB(msg)
 }
 
 func (sc *ServiceCommon) Start(pipe *dm.DataMsgPipe) {
@@ -87,7 +87,7 @@ func (sc *ServiceCommon) Start(pipe *dm.DataMsgPipe) {
 					continue
 				}
 				sc.handleSysCmd(cmd.MsgType, cmd.Payload)
-			case userMsg, okUser := <-*sc.pipe.ReadRecvChan():
+			case userMsg, okUser := <-sc.pipe.ReadDownChan():
 				if !okUser {
 					continue
 				}

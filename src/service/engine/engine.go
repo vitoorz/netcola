@@ -8,17 +8,17 @@ import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
-	svc "service/core"
+	"service"
 )
 
 type engineT struct {
-	svc.Service
+	service.Service
 }
 
-func NewEngineDefine(bus *dm.DataMsgPipe) *engineT {
+func NewEngine(bus *dm.DataMsgPipe) *engineT {
 	t := &engineT{}
-	t.Service = *svc.NewService("")
-	t.State = svc.StateInit
+	t.Service = *service.NewService("")
+	t.State = service.StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
 	t.BUS = bus
 	return t
@@ -49,9 +49,9 @@ func (t *engineT) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 	logger.Info("engine cycle start")
 	for {
 		select {
-		case msg, ok := <-datapipe.ReadRecvChan():
+		case msg, ok := <-datapipe.ReadDownChan():
 			if !ok {
-				logger.Info("ReadRecvChan Read error")
+				logger.Info("ReadDownChan Read error")
 				break
 			}
 			logger.Info("recv data:%+v", msg)

@@ -14,7 +14,9 @@ import (
 	"library/idgen"
 	"library/logger"
 	"server/support"
+	"service"
 	"service/engine"
+	"service/privatetcp"
 )
 
 func stopAndCleanMemory() {
@@ -38,9 +40,13 @@ func main() {
 	stopAndCleanMemory()
 
 	bus := dm.NewDataMsgPipe(0, 0)
-	e := engine.NewEngineDefine(bus)
+
+	e := engine.NewEngine(bus)
 	e.StartEngine(support.NetPipe)
 	ekey := e.ControlEntry()
+
+	tcpsrv := privatetcp.NewPrivateTCPServer(bus)
+	service.StartService(tcpsrv)
 
 	for {
 		select {

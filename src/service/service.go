@@ -1,4 +1,4 @@
-package core
+package service
 
 import (
 	"sync"
@@ -19,11 +19,6 @@ type Service struct {
 	Name  string
 }
 
-type ServiceI interface {
-	OnInit(*dm.DataMsgPipe)
-	OnExit()
-}
-
 func NewService(name string) *Service {
 	t := &Service{}
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
@@ -31,4 +26,17 @@ func NewService(name string) *Service {
 	t.ID = idgen.NewObjectID()
 	t.Name = name
 	return t
+}
+
+type ServiceI interface {
+	Init() bool
+	Start() bool
+	Pause() bool
+	Exit() bool
+	Kill() bool
+}
+
+func StartService(s ServiceI) {
+	s.Init()
+	s.Start()
 }

@@ -1,4 +1,4 @@
-package core
+package service
 
 //over-all data types that would be used in multiple package
 type StateT int32
