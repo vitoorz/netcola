@@ -1,7 +1,7 @@
 package support
 
 import (
-	"library/datamsg"
+	dm "library/core/datamsg"
 )
 
-var NetPipe *datamsg.DataMsgPipe = datamsg.NewNetMsgPipe(0, 0)
+var NetPipe *dm.DataMsgPipe = dm.NewNetMsgPipe(0, 0)
