@@ -41,9 +41,10 @@ func main() {
 
 	bus := dm.NewDataMsgPipe(0, 0)
 
-	e := engine.NewEngine(bus)
-	e.StartEngine(support.NetPipe)
-	ekey := e.ControlEntry()
+	enginesrv := engine.NewEngine(bus)
+	service.StartService(enginesrv)
+
+	ekey := enginesrv.ControlEntry()
 
 	tcpsrv := privatetcp.NewPrivateTCPServer(bus)
 	service.StartService(tcpsrv)
