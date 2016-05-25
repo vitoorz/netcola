@@ -34,9 +34,5 @@ type ServiceI interface {
 	Pause() bool
 	Exit() bool
 	Kill() bool
-}
-
-func StartService(s ServiceI) {
-	s.Init()
-	s.Start()
+	CommonService() *Service
 }
