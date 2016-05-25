@@ -48,19 +48,22 @@ func (t *ServiceManager) Register(service IService) error {
 	}
 
 	sList.Lists[s.ID] = service
-
 	return nil
 }
 
-func StartService(s IService) {
-	s.Init()
-	s.Start()
-	ServicePool.Register(s)
+func StartService(s IService) bool {
+	if s.Init() &&
+		s.Start() {
+		ServicePool.Register(s)
+		return true
+	} else {
+		return false
+	}
 }
 
 //send down (mostly request) data message to the right receiver
-func SendDown(msg *datamsg.DataMsg) error {
-	s, ok := ServicePool.Service(msg.Receiver)
+func (t *ServiceManager) SendDown(msg *datamsg.DataMsg) error {
+	s, ok := t.Service(msg.Receiver)
 	if !ok {
 		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
 	}
@@ -70,8 +73,8 @@ func SendDown(msg *datamsg.DataMsg) error {
 }
 
 //send up (mostly ack) data message to the right receiver
-func SendUp(msg *datamsg.DataMsg) error {
-	s, ok := ServicePool.Service(msg.Receiver)
+func (t *ServiceManager) SendUp(msg *datamsg.DataMsg) error {
+	s, ok := t.Service(msg.Receiver)
 	if !ok {
 		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
 	}

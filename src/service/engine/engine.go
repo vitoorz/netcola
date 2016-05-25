@@ -5,6 +5,7 @@ import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
+	"service/job"
 )
 
 const ServiceName = "engine"
@@ -41,6 +42,9 @@ func (t *engineType) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 				break
 			}
 			logger.Debug("engine recv data:%+v", msg)
+			if msg.Receiver == job.ServiceName {
+				service.ServicePool.SendDown(msg)
+			}
 		case msg, ok := <-t.Cmd:
 			if !ok {
 				logger.Info("ControlMsgPipe.Cmd Read error")

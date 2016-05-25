@@ -26,7 +26,7 @@ func (t *jobType) Init() bool {
 
 func (t *jobType) Start() bool {
 	logger.Info("job start running")
-	//go t.engine(t.BUS)
+	go t.job()
 	return true
 }
 
@@ -40,4 +40,13 @@ func (t *jobType) Exit() bool {
 
 func (t *jobType) Kill() bool {
 	return true
+}
+
+func (t *jobType) job() {
+	for {
+		select {
+		case msg, _ := <-t.DataMsgPipe.Down:
+			logger.Debug("job msg:%+v", msg)
+		}
+	}
 }
