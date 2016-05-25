@@ -87,3 +87,7 @@ func (t *engineType) Exit() bool {
 func (t *engineType) Kill() bool {
 	return true
 }
+
+func (t *engineType) CommonService() *service.Service {
+	return &t.Service
+}
