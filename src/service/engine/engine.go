@@ -11,12 +11,12 @@ import (
 	"service"
 )
 
-type engineT struct {
+type engineType struct {
 	service.Service
 }
 
-func NewEngine(bus *dm.DataMsgPipe) *engineT {
-	t := &engineT{}
+func NewEngine(bus *dm.DataMsgPipe) *engineType {
+	t := &engineType{}
 	t.Service = *service.NewService("")
 	t.State = service.StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
@@ -24,17 +24,11 @@ func NewEngine(bus *dm.DataMsgPipe) *engineT {
 	return t
 }
 
-func (t *engineT) StartEngine(pipe *dm.DataMsgPipe) {
-	logger.Info("engine start running")
-	go t.engine(pipe)
-}
-
-func (t *engineT) ControlEntry() *cm.ControlMsgPipe {
+func (t *engineType) ControlEntry() *cm.ControlMsgPipe {
 	return &t.ControlMsgPipe
 }
 
-func (t *engineT) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
-	// catch panic
+func (t *engineType) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 	defer func() {
 		if x := recover(); x != nil {
 			logger.Error("Engine job panic: %v", x)
@@ -69,4 +63,27 @@ func (t *engineT) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 		}
 	}
 	return nil
+}
+
+func (t *engineType) Init() bool {
+	logger.Info("engine init")
+	return true
+}
+
+func (t *engineType) Start() bool {
+	logger.Info("engine start running")
+	go t.engine(t.BUS)
+	return true
+}
+
+func (t *engineType) Pause() bool {
+	return true
+}
+
+func (t *engineType) Exit() bool {
+	return true
+}
+
+func (t *engineType) Kill() bool {
+	return true
 }
