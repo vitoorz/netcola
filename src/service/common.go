@@ -91,7 +91,7 @@ func (sc *ServiceCommon) Start(pipe *dm.DataMsgPipe) {
 				if !okUser {
 					continue
 				}
-				sc.handleUserCmd(userMsg.OpCode(), userMsg)
+				sc.handleUserCmd(userMsg.MsgType, userMsg)
 			default:
 			}
 		}

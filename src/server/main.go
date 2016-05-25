@@ -16,6 +16,7 @@ import (
 	"server/support"
 	"service"
 	"service/engine"
+	"service/job"
 	"service/privatetcp"
 )
 
@@ -48,6 +49,9 @@ func main() {
 
 	tcpsrv := privatetcp.NewPrivateTCPServer(bus)
 	service.StartService(tcpsrv)
+
+	jobsrv := job.NewJob(nil)
+	service.StartService(jobsrv)
 
 	for {
 		select {

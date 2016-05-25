@@ -1,15 +1,13 @@
 package engine
 
 import (
-	"runtime"
-)
-
-import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
 )
+
+const ServiceName = "engine"
 
 type engineType struct {
 	service.Service
@@ -17,10 +15,7 @@ type engineType struct {
 
 func NewEngine(bus *dm.DataMsgPipe) *engineType {
 	t := &engineType{}
-	t.Service = *service.NewService("")
-	t.State = service.StateInit
-	t.ControlMsgPipe = *cm.NewControlMsgPipe()
-	t.DataMsgPipe = *dm.NewDataMsgPipe(0, 0)
+	t.Service = *service.NewService(ServiceName)
 	t.BUS = bus
 	return t
 }
@@ -37,10 +32,6 @@ func (t *engineType) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 		}
 	}()
 
-	// lock this go-routine to a system thread
-	runtime.LockOSThread()
-
-	//tickChan := time.NewTicker(time.Millisecond * 100).C
 	logger.Info("engine cycle start")
 	for {
 		select {
@@ -49,7 +40,7 @@ func (t *engineType) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 				logger.Info("ReadDownChan Read error")
 				break
 			}
-			logger.Info("recv data:%+v", msg)
+			logger.Debug("engine recv data:%+v", msg)
 		case msg, ok := <-t.Cmd:
 			if !ok {
 				logger.Info("ControlMsgPipe.Cmd Read error")

@@ -10,11 +10,12 @@ import (
 )
 
 import (
-	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"service"
 	"time"
 )
+
+const ServiceName = "privatetcpserver"
 
 type PrivateTCPServer struct {
 	service.Service
@@ -26,10 +27,7 @@ type PrivateTCPServer struct {
 
 func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
 	t := &PrivateTCPServer{}
-	t.Service = *service.NewService("")
-	t.State = service.StateInit
-	t.ControlMsgPipe = *cm.NewControlMsgPipe()
-	t.DataMsgPipe = *dm.NewDataMsgPipe(0, 0)
+	t.Service = *service.NewService(ServiceName)
 	t.BUS = bus
 	t.IP = "0.0.0.0"
 	t.Port = "7171"
@@ -91,5 +89,6 @@ func (t *PrivateTCPServer) serve(connection *net.TCPConn) {
 			logger.Warn("read byte:%d,error:%s", n, err.Error())
 		}
 		logger.Debug("read %d byte:%+v", n, data)
+		t.BUS.Down <- dm.NewDataMsg("job", 1, nil)
 	}
 }

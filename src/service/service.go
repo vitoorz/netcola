@@ -12,19 +12,22 @@ import (
 
 type Service struct {
 	sync.RWMutex
+	ID    idgen.ObjectID
+	Name  string
+	State StateT
 	cm.ControlMsgPipe
 	dm.DataMsgPipe
-	BUS   *dm.DataMsgPipe
-	ID    idgen.ObjectID
-	State StateT
-	Name  string
+	BUS *dm.DataMsgPipe
 }
 
 func NewService(name string) *Service {
 	t := &Service{}
-	t.ControlMsgPipe = *cm.NewControlMsgPipe()
 	t.ID = idgen.NewObjectID()
 	t.Name = name
+	t.State = StateInit
+	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.DataMsgPipe = *dm.NewDataMsgPipe(0, 0)
+	t.BUS = nil
 	return t
 }
 
