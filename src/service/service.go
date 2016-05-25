@@ -28,11 +28,15 @@ func NewService(name string) *Service {
 	return t
 }
 
-type ServiceI interface {
+func (t *Service) Self() *Service {
+	return t
+}
+
+type IService interface {
 	Init() bool
 	Start() bool
 	Pause() bool
 	Exit() bool
 	Kill() bool
-	CommonService() *Service
+	Self() *Service
 }

@@ -35,10 +35,6 @@ func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
 	return t
 }
 
-func (t *PrivateTCPServer) CommonService() *service.Service {
-	return &t.Service
-}
-
 func (t *PrivateTCPServer) Init() bool {
 	logger.Info("Start PrivateTCPServer")
 	tcpAddr, err := net.ResolveTCPAddr("tcp", t.IP+":"+t.Port)
