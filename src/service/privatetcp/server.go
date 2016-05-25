@@ -19,7 +19,7 @@ import (
 type PrivateTCPServer struct {
 	service.Service
 	Listener *net.TCPListener
-	Conn     *net.TCPConn
+	ConnList []*net.TCPConn
 	IP       string
 	Port     string
 }
@@ -54,16 +54,15 @@ func (t *PrivateTCPServer) Init() bool {
 }
 
 func (t *PrivateTCPServer) Start() bool {
-	var err error = nil
 	go func() {
 		for {
-			t.Conn, err = t.Listener.AcceptTCP()
+			connect, err := t.Listener.AcceptTCP()
 			if err != nil {
 				logger.Error("listener.AcceptTCP error,%s", err.Error())
 				time.Sleep(time.Second * 2)
 				continue
 			}
-			go t.serve()
+			go t.serve(connect)
 
 			//t.Conn.Close()
 		}
@@ -83,10 +82,10 @@ func (t *PrivateTCPServer) Kill() bool {
 	return true
 }
 
-func (t *PrivateTCPServer) serve() {
+func (t *PrivateTCPServer) serve(connection *net.TCPConn) {
 	for {
 		data := make([]byte, 1)
-		n, err := io.ReadAtLeast(t.Conn, data, 1)
+		n, err := io.ReadAtLeast(connection, data, 1)
 		if err != nil {
 			logger.Warn("read byte:%d,error:%s", n, err.Error())
 		}

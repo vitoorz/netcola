@@ -8,6 +8,8 @@ import (
 
 const (
 	SecondPerDay     = UnixTS(24 * 60 * 60)
+	SecondPerHour    = UnixTS(3600)
+	SecondPerMinute  = UnixTS(60)
 	debugWarnOnDelay = true
 )
 
@@ -23,16 +25,6 @@ func NewFrame() *Frame {
 	return &Frame{
 		TimeStamp: UnixTS(time.Now().UTC().Unix()),
 	}
-}
-
-func BeginningOfToday() UnixTS {
-	ts := UnixTS(time.Now().UTC().Unix())
-	return ts - (ts % SecondPerDay)
-}
-
-func EndingOfToday() UnixTS {
-	ts := UnixTS(time.Now().UTC().Unix())
-	return ts - (ts % SecondPerDay) + SecondPerDay
 }
 
 func (f *Frame) SetFrameTime() {
@@ -52,4 +44,12 @@ func (f *Frame) BeginningOfDay() UnixTS {
 
 func (f *Frame) EndingOfDay() UnixTS {
 	return f.TimeStamp - (f.TimeStamp % SecondPerDay) + SecondPerDay
+}
+
+func (f *Frame) ThisDayAt(h, m, s uint8) UnixTS {
+	at := f.BeginningOfDay()
+	if h >= 24 || m >= 60 || s >= 60 || h < 0 || m < 0 || s < 0 {
+		return at
+	}
+	return at + UnixTS(h)*SecondPerHour + UnixTS(m)*SecondPerMinute + UnixTS(s)
 }
