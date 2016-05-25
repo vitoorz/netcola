@@ -5,10 +5,15 @@ type StateT int32
 
 // todo: prababally , state should be put to service
 const (
-	StateUnknown StateT = 0
-	StateOK             = 1
-	StateError          = 2
-	StateRunning        = 3
-	StateStop           = 4
-	StateInit           = 5
+	StateUnknown StateT = iota //in develop stage, we use iota, when mature will change
+	StateOK
+	StateError
+	StateRunning
+	StateStop
+	// following is corresponding to service interface
+	StateInit
+	StateStart
+	StatePause
+	StateExit
+	StateKill
 )

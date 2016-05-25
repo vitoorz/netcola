@@ -73,11 +73,11 @@ func (t *PrivateTCPServer) Pause() bool {
 	return true
 }
 
-func (t *PrivateTCPServer) Exit() bool {
+func (t *PrivateTCPServer) Resume() bool {
 	return true
 }
 
-func (t *PrivateTCPServer) Kill() bool {
+func (t *PrivateTCPServer) Exit() bool {
 	return true
 }
 

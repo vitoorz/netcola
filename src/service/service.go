@@ -39,7 +39,7 @@ type IService interface {
 	Init() bool
 	Start() bool
 	Pause() bool
+	Resume() bool
 	Exit() bool
-	Kill() bool
 	Self() *Service
 }

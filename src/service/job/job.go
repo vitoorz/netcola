@@ -34,11 +34,11 @@ func (t *jobType) Pause() bool {
 	return true
 }
 
-func (t *jobType) Exit() bool {
+func (t *jobType) Resume() bool {
 	return true
 }
 
-func (t *jobType) Kill() bool {
+func (t *jobType) Exit() bool {
 	return true
 }
 

@@ -1,7 +1,9 @@
 package controlmsg
 
 const (
-	ControlMsgDummy = iota
+	ControlMsgUnknown = iota
+	ControlMsgPause
+	ControlMsgResume
 	ControlMsgExit
 	ControlMsgTick
 	ControlMsgMax

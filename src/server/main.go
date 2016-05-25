@@ -9,7 +9,7 @@ import (
 )
 
 import (
-	cm "library/core/controlmsg"
+	//cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/idgen"
 	"library/logger"
@@ -45,8 +45,6 @@ func main() {
 	enginesrv := engine.NewEngine(bus)
 	service.StartService(enginesrv)
 
-	ekey := enginesrv.ControlEntry()
-
 	tcpsrv := privatetcp.NewPrivateTCPServer(bus)
 	service.StartService(tcpsrv)
 
@@ -61,8 +59,9 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
-			ekey.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-			<-ekey.Echo
+			//enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			//<-enginesrv.Echo
+			enginesrv.Exit()
 			return
 		case sigMsg, ok := <-support.SignalService.Echo:
 			if !ok {
@@ -70,8 +69,7 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
-			ekey.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-			<-ekey.Echo
+			enginesrv.Exit()
 			return
 		}
 	}
