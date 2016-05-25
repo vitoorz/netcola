@@ -1,22 +1,22 @@
 package datamsg
 
 type DataMsg struct {
-	Dest    string
-	MsgType int
-	Next    *DataMsg
-	Payload interface{}
+	Receiver string
+	MsgType  int
+	Next     *DataMsg
+	Payload  interface{}
 }
 
 func NewDataMsg(
-	dest string,
+	recv string,
 	opcode int,
 	payload interface{},
 ) *DataMsg {
 	var msg = &DataMsg{
-		MsgType: opcode,
-		Dest:    dest,
-		Next:    nil,
-		Payload: payload,
+		MsgType:  opcode,
+		Receiver: recv,
+		Next:     nil,
+		Payload:  payload,
 	}
 	return msg
 }
