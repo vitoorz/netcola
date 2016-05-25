@@ -5,10 +5,11 @@ import (
 )
 
 type DataMsg struct {
-	opcode  int
-	owner   idgen.ObjectID
-	payload interface{}
-	next    *DataMsg
+	opcode   int
+	receiver string
+	owner    idgen.ObjectID
+	payload  interface{}
+	next     *DataMsg
 }
 
 func NewDataMsg() *DataMsg {
@@ -22,6 +23,14 @@ func (p *DataMsg) SetOpCode(opcode int) {
 
 func (p *DataMsg) OpCode() int {
 	return p.opcode
+}
+
+func (p *DataMsg) SetReceiver(service string) {
+	p.receiver = service
+}
+
+func (p *DataMsg) Receiver() string {
+	return p.receiver
 }
 
 func (p *DataMsg) SetOwner(id idgen.ObjectID) {
