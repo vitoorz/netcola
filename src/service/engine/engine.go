@@ -20,6 +20,7 @@ func NewEngine(bus *dm.DataMsgPipe) *engineType {
 	t.Service = *service.NewService("")
 	t.State = service.StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.DataMsgPipe = *dm.NewDataMsgPipe(0, 0)
 	t.BUS = bus
 	return t
 }
@@ -86,8 +87,4 @@ func (t *engineType) Exit() bool {
 
 func (t *engineType) Kill() bool {
 	return true
-}
-
-func (t *engineType) CommonService() *service.Service {
-	return &t.Service
 }

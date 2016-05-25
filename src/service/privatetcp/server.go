@@ -29,9 +29,10 @@ func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
 	t.Service = *service.NewService("")
 	t.State = service.StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.DataMsgPipe = *dm.NewDataMsgPipe(0, 0)
+	t.BUS = bus
 	t.IP = "0.0.0.0"
 	t.Port = "7171"
-	t.BUS = bus
 	return t
 }
 

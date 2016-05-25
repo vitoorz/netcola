@@ -13,6 +13,7 @@ import (
 type Service struct {
 	sync.RWMutex
 	cm.ControlMsgPipe
+	dm.DataMsgPipe
 	BUS   *dm.DataMsgPipe
 	ID    idgen.ObjectID
 	State StateT
@@ -22,7 +23,6 @@ type Service struct {
 func NewService(name string) *Service {
 	t := &Service{}
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
-	t.BUS = nil
 	t.ID = idgen.NewObjectID()
 	t.Name = name
 	return t
