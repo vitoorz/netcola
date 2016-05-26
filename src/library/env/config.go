@@ -62,7 +62,7 @@ func (c *Config) ValString(key string) (string, error) {
 func (c *Config) ValBool(key string) (bool, error) {
 	v, err := c.ValString(key)
 	if err != nil {
-		return 0, err
+		return false, err
 	}
 
 	lower := strings.ToLower(v)
@@ -87,10 +87,10 @@ func (c *Config) ValInt64(key string) (int64, error) {
 	return value, err
 }
 
-func (c *Config) ValFloat64(key string) (float64, bool) {
+func (c *Config) ValFloat64(key string) (float64, error) {
 	v, err := c.ValString(key)
 	if err != nil {
-		return 0, err
+		return float64(0), err
 	}
 
 	value, err := strconv.ParseFloat(v, 64)
