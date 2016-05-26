@@ -7,8 +7,8 @@ import (
 
 func ExampleEngineType_Pause() {
 
-	enginesrv := NewEngine(nil)
-	service.StartService(enginesrv)
+	enginesrv := NewEngine()
+	service.StartService(enginesrv, "engine", nil)
 
 	go func() {
 		tickChan := time.NewTicker(time.Second * 10).C

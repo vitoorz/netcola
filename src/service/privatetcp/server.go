@@ -28,14 +28,16 @@ type PrivateTCPServer struct {
 func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
 	t := &PrivateTCPServer{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = bus
+	t.BUS = nil
 	t.IP = "0.0.0.0"
 	t.Port = "7171"
 	return t
 }
 
-func (t *PrivateTCPServer) Start() bool {
+func (t *PrivateTCPServer) Start(name string, bus *dm.DataMsgPipe) bool {
 	logger.Info("Start PrivateTCPServer")
+	t.Name = name
+	t.BUS = bus
 	tcpAddr, err := net.ResolveTCPAddr("tcp", t.IP+":"+t.Port)
 	if err != nil {
 		logger.Error("net.ResolveTCPAddr error,%s", err.Error())

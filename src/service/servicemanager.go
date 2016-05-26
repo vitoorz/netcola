@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
-	"library/core/datamsg"
+	dm "library/core/datamsg"
 	. "library/idgen"
 )
 
@@ -51,8 +51,8 @@ func (t *ServiceManager) Register(service IService) error {
 	return nil
 }
 
-func StartService(s IService) bool {
-	if s.Start() {
+func StartService(s IService, name string, bus *dm.DataMsgPipe) bool {
+	if s.Start(name, bus) {
 		ServicePool.Register(s)
 		return true
 	} else {
@@ -61,7 +61,7 @@ func StartService(s IService) bool {
 }
 
 //send down (mostly request) data message to the right receiver
-func (t *ServiceManager) SendDown(msg *datamsg.DataMsg) error {
+func (t *ServiceManager) SendDown(msg *dm.DataMsg) error {
 	s, ok := t.Service(msg.Receiver)
 	if !ok {
 		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
@@ -72,7 +72,7 @@ func (t *ServiceManager) SendDown(msg *datamsg.DataMsg) error {
 }
 
 //send up (mostly ack) data message to the right receiver
-func (t *ServiceManager) SendUp(msg *datamsg.DataMsg) error {
+func (t *ServiceManager) SendUp(msg *dm.DataMsg) error {
 	s, ok := t.Service(msg.Receiver)
 	if !ok {
 		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))

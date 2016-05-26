@@ -42,14 +42,14 @@ func main() {
 
 	bus := dm.NewDataMsgPipe(0, 0)
 
-	enginesrv := engine.NewEngine(bus)
-	service.StartService(enginesrv)
+	enginesrv := engine.NewEngine()
+	service.StartService(enginesrv, "engine", bus)
 
 	tcpsrv := privatetcp.NewPrivateTCPServer(bus)
-	service.StartService(tcpsrv)
+	service.StartService(tcpsrv, "tcpserver", bus)
 
-	jobsrv := job.NewJob(nil)
-	service.StartService(jobsrv)
+	jobsrv := job.NewJob()
+	service.StartService(jobsrv, "job", bus)
 
 	for {
 		select {
