@@ -25,10 +25,35 @@ func NewJob() *jobType {
 }
 
 func (t *jobType) job() {
+	logger.Info("job service running")
+
+	var next int
 	for {
 		select {
-		case msg, _ := <-t.DataMsgPipe.Down:
-			logger.Debug("job msg:%+v", msg)
+		case msg, ok := <-t.DataMsgPipe.Down:
+			if !ok {
+				logger.Info("Data Read error")
+				break
+			}
+			next, ok = t.DataEntry(msg)
+			break
+		case msg, ok := <-t.Cmd:
+			if !ok {
+				logger.Info("Cmd Read error")
+				break
+			}
+			next, ok = t.ControlEntry(msg)
+			break
+		}
+
+		switch next {
+		case Break:
+			break
+		case Return:
+			return
+		case Continue:
 		}
 	}
+	return
+
 }

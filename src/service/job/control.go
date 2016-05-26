@@ -1,6 +1,7 @@
 package job
 
 import (
+	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
 )
@@ -23,4 +24,38 @@ func (t *jobType) Resume() bool {
 
 func (t *jobType) Exit() bool {
 	return true
+}
+
+func (t *jobType) ControlEntry(msg *cm.ControlMsg) (int, bool) {
+	switch msg.MsgType {
+	case cm.ControlMsgExit:
+		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)
+		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+		logger.Info("job exit")
+		return Return, true
+	case cm.ControlMsgPause:
+		logger.Info("job paused")
+		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgPause}
+		for {
+			var resume bool = false
+			select {
+			case msg, ok := <-t.Cmd:
+				if !ok {
+					logger.Info("Cmd Read error")
+					break
+				}
+				switch msg.MsgType {
+				case cm.ControlMsgResume:
+					t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgResume}
+					resume = true
+					break
+				}
+			}
+			if resume {
+				break
+			}
+		}
+		logger.Info("job resumed")
+	}
+	return Continue, true
 }

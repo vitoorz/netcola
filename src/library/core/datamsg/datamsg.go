@@ -7,13 +7,9 @@ type DataMsg struct {
 	Payload  interface{}
 }
 
-func NewDataMsg(
-	recv string,
-	opcode int,
-	payload interface{},
-) *DataMsg {
+func NewDataMsg(recv string, msgtype int, payload interface{}) *DataMsg {
 	var msg = &DataMsg{
-		MsgType:  opcode,
+		MsgType:  msgtype,
 		Receiver: recv,
 		Next:     nil,
 		Payload:  payload,

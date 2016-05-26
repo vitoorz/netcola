@@ -25,17 +25,16 @@ func NewEngine() *engineType {
 	return t
 }
 
-func (t *engineType) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
+func (t *engineType) engine(datapipe *dm.DataMsgPipe) {
 	//defer func() {
 	//	if x := recover(); x != nil {
 	//		logger.Error("Engine job panic: %v", x)
 	//		logger.Stack()
 	//	}
 	//}()
-	err = nil
-	logger.Info("engine cycle start")
-	var next int
+	logger.Info("engine service running")
 
+	var next int
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -59,9 +58,9 @@ func (t *engineType) engine(datapipe *dm.DataMsgPipe) (err interface{}) {
 		case Break:
 			break
 		case Return:
-			return err
+			return
 		case Continue:
 		}
 	}
-	return err
+	return
 }
