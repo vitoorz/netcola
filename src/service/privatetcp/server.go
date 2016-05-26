@@ -74,8 +74,8 @@ func (t *PrivateTCPServer) serve() {
 			continue
 		}
 		go t.readConn(connect)
-		go t.writeConn()
 	}
+	go t.writeConn()
 }
 
 func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
@@ -108,7 +108,7 @@ func (t *PrivateTCPServer) writeConn() {
 				connection.Close()
 				return
 			} else {
-				logger.Info("send bus.up:%d byte", count)
+				logger.Info("sent to network:%d byte", count)
 			}
 		}
 	}
