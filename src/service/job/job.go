@@ -19,11 +19,6 @@ func NewJob(bus *dm.DataMsgPipe) *jobType {
 	return t
 }
 
-func (t *jobType) Init() bool {
-	logger.Info("job init")
-	return true
-}
-
 func (t *jobType) Start() bool {
 	logger.Info("job start running")
 	go t.job()

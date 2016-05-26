@@ -34,7 +34,7 @@ func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
 	return t
 }
 
-func (t *PrivateTCPServer) Init() bool {
+func (t *PrivateTCPServer) Start() bool {
 	logger.Info("Start PrivateTCPServer")
 	tcpAddr, err := net.ResolveTCPAddr("tcp", t.IP+":"+t.Port)
 	if err != nil {
@@ -49,10 +49,7 @@ func (t *PrivateTCPServer) Init() bool {
 	}
 
 	logger.Info("listening port:%s", t.Port)
-	return true
-}
 
-func (t *PrivateTCPServer) Start() bool {
 	go func() {
 		for {
 			connect, err := t.Listener.AcceptTCP()

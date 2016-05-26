@@ -52,8 +52,7 @@ func (t *ServiceManager) Register(service IService) error {
 }
 
 func StartService(s IService) bool {
-	if s.Init() &&
-		s.Start() {
+	if s.Start() {
 		ServicePool.Register(s)
 		return true
 	} else {

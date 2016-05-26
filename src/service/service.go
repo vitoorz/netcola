@@ -36,7 +36,6 @@ func (t *Service) Self() *Service {
 }
 
 type IService interface {
-	Init() bool
 	Start() bool
 	Pause() bool
 	Resume() bool
