@@ -27,7 +27,7 @@ func NewJob() *jobType {
 func (t *jobType) job() {
 	logger.Info("job service running")
 
-	var next int
+	var next, fun int = Continue, service.FunUnknown
 	for {
 		select {
 		case msg, ok := <-t.DataMsgPipe.Down:
@@ -35,14 +35,17 @@ func (t *jobType) job() {
 				logger.Info("Data Read error")
 				break
 			}
-			next, ok = t.DataEntry(msg)
+			next, fun = t.DataEntry(msg)
+			if fun == service.FunDownChanFull {
+				logger.Warn("need do something when full")
+			}
 			break
 		case msg, ok := <-t.Cmd:
 			if !ok {
 				logger.Info("Cmd Read error")
 				break
 			}
-			next, ok = t.ControlEntry(msg)
+			next, fun = t.ControlEntry(msg)
 			break
 		}
 

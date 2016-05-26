@@ -22,13 +22,18 @@ func (p *DataMsgPipe) ReadDownChan() chan *DataMsg {
 	return p.Down
 }
 
-func (p *DataMsgPipe) WriteDownChanNB(msg *DataMsg) {
+func (p *DataMsgPipe) WriteDownChanNB(msg *DataMsg) bool {
 	select {
 	case p.Down <- msg:
+		break
 	default:
-		logger.Warn("down chan overflow, may need to write to buffer")
+		logger.Warn("down chan full")
+		go func() {
+			p.Down <- msg
+		}()
+		return false
 	}
-
+	return true
 }
 
 func (p *DataMsgPipe) Length() int {

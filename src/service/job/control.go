@@ -4,6 +4,7 @@ import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
+	"service"
 )
 
 func (t *jobType) Start(name string, bus *dm.DataMsgPipe) bool {
@@ -26,13 +27,13 @@ func (t *jobType) Exit() bool {
 	return true
 }
 
-func (t *jobType) ControlEntry(msg *cm.ControlMsg) (int, bool) {
+func (t *jobType) ControlEntry(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 		logger.Info("job exit")
-		return Return, true
+		return Return, service.FunOK
 	case cm.ControlMsgPause:
 		logger.Info("job paused")
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgPause}
@@ -57,5 +58,5 @@ func (t *jobType) ControlEntry(msg *cm.ControlMsg) (int, bool) {
 		}
 		logger.Info("job resumed")
 	}
-	return Continue, true
+	return Continue, service.FunOK
 }

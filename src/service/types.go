@@ -17,3 +17,10 @@ const (
 	StateExit
 	StateKill
 )
+
+const (
+	FunOK = iota
+	FunUnknown
+	FunPanic
+	FunDownChanFull
+)

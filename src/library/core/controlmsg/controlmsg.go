@@ -6,6 +6,7 @@ const (
 	ControlMsgResume
 	ControlMsgExit
 	ControlMsgTick
+	ControlMsgDegrade
 	ControlMsgMax
 )
 
