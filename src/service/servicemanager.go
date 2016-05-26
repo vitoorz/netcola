@@ -72,12 +72,12 @@ func (t *ServiceManager) SendDown(msg *dm.DataMsg) error {
 }
 
 //send up (mostly ack) data message to the right receiver
-func (t *ServiceManager) SendUp(msg *dm.DataMsg) error {
-	s, ok := t.Service(msg.Receiver)
-	if !ok {
-		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
-	}
-	s.Self().DataMsgPipe.WriteUpChanNB(msg)
-
-	return nil
-}
+//func (t *ServiceManager) SendUp(msg *dm.DataMsg) error {
+//	s, ok := t.Service(msg.Receiver)
+//	if !ok {
+//		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
+//	}
+//	s.Self().DataMsgPipe.WriteUpChanNB(msg)
+//
+//	return nil
+//}

@@ -2,15 +2,18 @@ package datamsg
 
 type DataMsg struct {
 	Receiver string
+	Meta     interface{}
 	MsgType  int
 	Next     *DataMsg
 	Payload  interface{}
 }
 
-func NewDataMsg(recv string, msgtype int, payload interface{}) *DataMsg {
+func NewDataMsg(recv string, meta interface{},
+	msgtype int, payload interface{}) *DataMsg {
 	var msg = &DataMsg{
 		MsgType:  msgtype,
 		Receiver: recv,
+		Meta:     meta,
 		Next:     nil,
 		Payload:  payload,
 	}

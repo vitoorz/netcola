@@ -32,7 +32,7 @@ func NewServiceCommon(tickStepNano int64, pipe *dm.DataMsgPipe) *ServiceCommon {
 		tickStepNano = 1e7
 	}
 	if pipe == nil {
-		pipe = dm.NewDataMsgPipe(1, 1)
+		pipe = dm.NewDataMsgPipe(1)
 	}
 	sc := &ServiceCommon{
 		tickStepNano:    tickStepNano,

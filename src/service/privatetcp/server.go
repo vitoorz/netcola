@@ -17,12 +17,12 @@ const ServiceName = "privatetcpserver"
 type PrivateTCPServer struct {
 	service.Service
 	Listener *net.TCPListener
-	ConnList []*net.TCPConn
-	IP       string
-	Port     string
+	//ConnList []*net.TCPConn
+	IP   string
+	Port string
 }
 
-func NewPrivateTCPServer(bus *dm.DataMsgPipe) *PrivateTCPServer {
+func NewPrivateTCPServer() *PrivateTCPServer {
 	t := &PrivateTCPServer{}
 	t.Service = *service.NewService(ServiceName)
 	t.BUS = nil
@@ -70,45 +70,42 @@ func (t *PrivateTCPServer) serve() {
 		if err != nil {
 			logger.Error("listener.AcceptTCP error,%s", err.Error())
 			time.Sleep(time.Second * 2)
+			connect.Close()
 			continue
 		}
 		go t.readConn(connect)
-		go t.writeConn(connect)
-
-		//t.Conn.Close()
+		go t.writeConn()
 	}
 }
 
 func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
-	defer func() {
-		connection.Close()
-	}()
 	for {
 		data := make([]byte, 1)
 		n, err := io.ReadAtLeast(connection, data, 1)
 		if err != nil {
 			logger.Warn("read byte:%d,error:%s", n, err.Error())
+			connection.Close()
 			return
 		}
 		logger.Debug("read %d byte:%+v", n, data)
-		t.BUS.Down <- dm.NewDataMsg("job", 0, data)
+		t.BUS.Down <- dm.NewDataMsg("job", connection, 0, data)
 	}
 }
 
-func (t *PrivateTCPServer) writeConn(connection *net.TCPConn) {
-	defer func() {
-		connection.Close()
-	}()
+func (t *PrivateTCPServer) writeConn() {
+
 	for {
 		select {
-		case data, ok := <-t.BUS.Up:
+		case data, ok := <-t.Down:
 			if !ok {
 				logger.Info("Data Read error")
 				break
 			}
+			connection := data.Meta.(*net.TCPConn)
 			count, err := connection.Write(data.Payload.([]byte))
 			if err != nil {
 				logger.Warn("conn write err:%s", err.Error())
+				connection.Close()
 				return
 			} else {
 				logger.Info("send bus.up:%d byte", count)

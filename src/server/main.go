@@ -9,8 +9,6 @@ import (
 )
 
 import (
-	//cm "library/core/controlmsg"
-	dm "library/core/datamsg"
 	"library/idgen"
 	"library/logger"
 	"server/support"
@@ -40,16 +38,14 @@ func main() {
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 
-	bus := dm.NewDataMsgPipe(0, 0)
-
 	enginesrv := engine.NewEngine()
-	service.StartService(enginesrv, "engine", bus)
+	service.StartService(enginesrv, "engine", &enginesrv.DataMsgPipe)
 
-	tcpsrv := privatetcp.NewPrivateTCPServer(bus)
-	service.StartService(tcpsrv, "tcpserver", bus)
+	tcpsrv := privatetcp.NewPrivateTCPServer()
+	service.StartService(tcpsrv, "tcpserver", &enginesrv.DataMsgPipe)
 
 	jobsrv := job.NewJob()
-	service.StartService(jobsrv, "job", bus)
+	service.StartService(jobsrv, "job", &enginesrv.DataMsgPipe)
 
 	for {
 		select {
@@ -59,8 +55,6 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
-			//enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-			//<-enginesrv.Echo
 			enginesrv.Exit()
 			return
 		case sigMsg, ok := <-support.SignalService.Echo:
