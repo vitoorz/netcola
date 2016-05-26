@@ -26,12 +26,6 @@ func NewEngine() *engineType {
 }
 
 func (t *engineType) engine(datapipe *dm.DataMsgPipe) {
-	//defer func() {
-	//	if x := recover(); x != nil {
-	//		logger.Error("Engine job panic: %v", x)
-	//		logger.Stack()
-	//	}
-	//}()
 	logger.Info("engine service running")
 
 	var next int
