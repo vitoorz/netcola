@@ -1,14 +1,14 @@
 package env
 
 import (
-	"regexp"
-	"sync"
-	"os"
-	"io/ioutil"
-	"strings"
 	"errors"
-	"strconv"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type Config struct {
@@ -17,7 +17,6 @@ type Config struct {
 }
 
 var kvRegexp *regexp.Regexp = regexp.MustCompile(`[\t ]*([0-9A-Za-z_]+)[\t ]*=[\t ]*([^\t\n\f\r# ]+)[\t #]*`)
-
 
 func NewConfig(path string) *Config {
 	c := &Config{}
@@ -30,7 +29,7 @@ func NewConfig(path string) *Config {
 	return c
 }
 
-func (c * Config) Set(key string, val interface{}) {
+func (c *Config) Set(key string, val interface{}) {
 	value := ""
 	b, ok := val.(bool)
 	if ok {

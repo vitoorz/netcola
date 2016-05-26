@@ -15,4 +15,3 @@ func init() {
 		SysEnv.Set(pair[0], pair[1])
 	}
 }
-
