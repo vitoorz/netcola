@@ -2,11 +2,14 @@ package engine
 
 import (
 	cm "library/core/controlmsg"
+	dm "library/core/datamsg"
 	"library/logger"
 )
 
-func (t *engineType) Start() bool {
+func (t *engineType) Start(name string, bus *dm.DataMsgPipe) bool {
 	logger.Info("engine start running")
+	t.Name = name
+	t.BUS = bus
 	go t.engine(t.BUS)
 	return true
 }

@@ -36,7 +36,7 @@ func (t *Service) Self() *Service {
 }
 
 type IService interface {
-	Start() bool
+	Start(name string, bus *dm.DataMsgPipe) bool
 	Pause() bool
 	Resume() bool
 	Exit() bool

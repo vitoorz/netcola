@@ -18,10 +18,10 @@ type engineType struct {
 	service.Service
 }
 
-func NewEngine(bus *dm.DataMsgPipe) *engineType {
+func NewEngine() *engineType {
 	t := &engineType{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = bus
+	t.BUS = nil
 	return t
 }
 

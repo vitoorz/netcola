@@ -1,40 +1,27 @@
 package job
 
 import (
-	dm "library/core/datamsg"
 	"library/logger"
 	"service"
 )
 
 const ServiceName = "job"
 
+const (
+	Break = iota
+	Continue
+	Return
+)
+
 type jobType struct {
 	service.Service
 }
 
-func NewJob(bus *dm.DataMsgPipe) *jobType {
+func NewJob() *jobType {
 	t := &jobType{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = bus
+	t.BUS = nil
 	return t
-}
-
-func (t *jobType) Start() bool {
-	logger.Info("job start running")
-	go t.job()
-	return true
-}
-
-func (t *jobType) Pause() bool {
-	return true
-}
-
-func (t *jobType) Resume() bool {
-	return true
-}
-
-func (t *jobType) Exit() bool {
-	return true
 }
 
 func (t *jobType) job() {
