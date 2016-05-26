@@ -17,11 +17,9 @@ func ExampleEngineType_Pause() {
 			select {
 			case <-tickChan:
 				if trick {
-					//logger.Debug("engine pause test")
 					enginesrv.Pause()
 					trick = false
 				} else {
-					//logger.Debug("engine resume test")
 					enginesrv.Resume()
 					trick = true
 				}

@@ -87,7 +87,7 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 			connection.Close()
 			return
 		}
-		logger.Debug("read %d byte:%+v", n, data)
+		logger.Info("read %d byte:%+v", n, data)
 		t.BUS.Down <- dm.NewDataMsg("job", connection, 0, data)
 	}
 }

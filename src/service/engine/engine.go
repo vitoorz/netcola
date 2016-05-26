@@ -43,7 +43,6 @@ func (t *engineType) engine(datapipe *dm.DataMsgPipe) {
 				logger.Info("DownChan Read error")
 				break
 			}
-			logger.Debug("engine recv data:%+v", msg)
 			next, ok = t.DataEntry(msg)
 			break
 		}
