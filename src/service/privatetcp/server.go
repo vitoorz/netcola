@@ -17,15 +17,14 @@ const ServiceName = "privatetcpserver"
 type PrivateTCPServer struct {
 	service.Service
 	Listener *net.TCPListener
-	//ConnList []*net.TCPConn
-	IP   string
-	Port string
+	Output   *dm.DataMsgPipe
+	IP       string
+	Port     string
 }
 
 func NewPrivateTCPServer() *PrivateTCPServer {
 	t := &PrivateTCPServer{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = nil
 	t.IP = "0.0.0.0"
 	t.Port = "7171"
 	return t
@@ -34,7 +33,7 @@ func NewPrivateTCPServer() *PrivateTCPServer {
 func (t *PrivateTCPServer) Start(name string, bus *dm.DataMsgPipe) bool {
 	logger.Info("Start PrivateTCPServer")
 	t.Name = name
-	t.BUS = bus
+	t.Output = bus
 	tcpAddr, err := net.ResolveTCPAddr("tcp", t.IP+":"+t.Port)
 	if err != nil {
 		logger.Error("net.ResolveTCPAddr error,%s", err.Error())
@@ -88,7 +87,7 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 			return
 		}
 		logger.Info("read %d byte:%+v", n, data)
-		t.BUS.Down <- dm.NewDataMsg("job", connection, 0, data)
+		t.Output.Down <- dm.NewDataMsg("job", connection, 0, data)
 	}
 }
 

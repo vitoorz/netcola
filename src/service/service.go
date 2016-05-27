@@ -17,7 +17,6 @@ type Service struct {
 	State StateT
 	cm.ControlMsgPipe
 	dm.DataMsgPipe
-	BUS *dm.DataMsgPipe
 }
 
 func NewService(name string) *Service {
@@ -27,7 +26,6 @@ func NewService(name string) *Service {
 	t.State = StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
 	t.DataMsgPipe = *dm.NewDataMsgPipe(0)
-	t.BUS = nil
 	return t
 }
 
