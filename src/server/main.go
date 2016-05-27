@@ -16,6 +16,7 @@ import (
 	"service/engine"
 	"service/job"
 	"service/privatetcp"
+    "service/timer"
 )
 
 func stopAndCleanMemory() {
@@ -39,13 +40,16 @@ func main() {
 	stopAndCleanMemory()
 
 	enginesrv := engine.NewEngine()
-	service.StartService(enginesrv, "engine", &enginesrv.DataMsgPipe)
+	service.StartService(enginesrv, "engine", nil)
 
 	tcpsrv := privatetcp.NewPrivateTCPServer()
-	service.StartService(tcpsrv, "tcpserver", &enginesrv.DataMsgPipe)
+	service.StartService(tcpsrv, "tcpserver", enginesrv.BUS)
 
 	jobsrv := job.NewJob()
-	service.StartService(jobsrv, "job", &enginesrv.DataMsgPipe)
+	service.StartService(jobsrv, "job", enginesrv.BUS)
+
+    timersrv := timer.NewTimer()
+    service.StartService(timersrv, "timer", enginesrv.BUS)
 
 	for {
 		select {

@@ -10,7 +10,7 @@ import (
 func (t *jobType) Start(name string, bus *dm.DataMsgPipe) bool {
 	logger.Info("job start running")
 	t.Name = name
-	t.BUS = bus
+	t.Output = bus
 	go t.job()
 	return true
 }

@@ -19,7 +19,7 @@ func (t *timerType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	logger.Info("timer: data msg:%+v,payload:%s", msg, msg.Payload.([]byte))
 	msg.Receiver = "tcpserver"
 	//service.ServicePool.SendDown(msg)
-	ok := t.BUS.WriteDownChanNB(msg)
+	ok := t.Output.WriteDownChanNB(msg)
 	if !ok {
 		// channel full
 		return Continue, service.FunDownChanFull

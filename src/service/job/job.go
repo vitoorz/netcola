@@ -1,6 +1,7 @@
 package job
 
 import (
+	dm "library/core/datamsg"
 	"library/logger"
 	"service"
 )
@@ -15,12 +16,13 @@ const (
 
 type jobType struct {
 	service.Service
+	Output *dm.DataMsgPipe
 }
 
 func NewJob() *jobType {
 	t := &jobType{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = nil
+	t.Output = nil
 	return t
 }
 

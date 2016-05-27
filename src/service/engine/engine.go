@@ -16,12 +16,13 @@ const (
 
 type engineType struct {
 	service.Service
+	BUS *dm.DataMsgPipe
 }
 
 func NewEngine() *engineType {
 	t := &engineType{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = nil
+	t.BUS = dm.NewDataMsgPipe(0)
 	return t
 }
 
