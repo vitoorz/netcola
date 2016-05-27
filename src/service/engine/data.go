@@ -5,7 +5,7 @@ import (
 	"service"
 )
 
-func (t *engineType) DataEntry(msg *dm.DataMsg) (int, bool) {
-	service.ServicePool.SendDown(msg)
-	return Continue, true
+func (t *engineType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
+	//service.ServicePool.SendDown(msg)
+	return Continue, service.FunOK
 }

@@ -32,7 +32,14 @@ func (t *timerType) job() {
 	var next, fun int = Continue, service.FunUnknown
 	for {
 		select {
-		case msg, ok := <-t.DataMsgPipe.Down:
+		case msg, ok := <-t.Cmd:
+			if !ok {
+				logger.Info("Cmd Read error")
+				break
+			}
+			next, fun = t.ControlEntry(msg)
+			break
+		case msg, ok := <-t.ReadDownChan():
 			if !ok {
 				logger.Info("Data Read error")
 				break
@@ -41,13 +48,6 @@ func (t *timerType) job() {
 			if fun == service.FunDownChanFull {
 				logger.Warn("need do something when full")
 			}
-			break
-		case msg, ok := <-t.Cmd:
-			if !ok {
-				logger.Info("Cmd Read error")
-				break
-			}
-			next, fun = t.ControlEntry(msg)
 			break
 		}
 

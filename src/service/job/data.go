@@ -17,7 +17,14 @@ func (t *jobType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	}()
 
 	logger.Info("job: data msg:%+v,payload:%s", msg, msg.Payload.([]byte))
-	msg.Receiver = "tcpserver"
+
+	switch msg.MsgType {
+	case 1:
+		msg.Receiver = "tcpserver"
+	case 2:
+		msg.Receiver = "timer"
+	}
+
 	//service.ServicePool.SendDown(msg)
 	ok := t.Output.WriteDownChanNB(msg)
 	if !ok {
@@ -25,4 +32,5 @@ func (t *jobType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 		return Continue, service.FunDownChanFull
 	}
 	return Continue, service.FunOK
+
 }

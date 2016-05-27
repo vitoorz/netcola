@@ -18,24 +18,24 @@ func NewDataMsgPipe(size int) *DataMsgPipe {
 	return pipe
 }
 
-func (p *DataMsgPipe) ReadDownChan() chan *DataMsg {
-	return p.Down
+func (t *DataMsgPipe) ReadDownChan() chan *DataMsg {
+	return t.Down
 }
 
-func (p *DataMsgPipe) WriteDownChanNB(msg *DataMsg) bool {
+func (t *DataMsgPipe) WriteDownChanNB(msg *DataMsg) bool {
 	select {
-	case p.Down <- msg:
+	case t.Down <- msg:
 		break
 	default:
 		logger.Warn("down chan full")
 		go func() {
-			p.Down <- msg
+			t.Down <- msg
 		}()
 		return false
 	}
 	return true
 }
 
-func (p *DataMsgPipe) Length() int {
-	return len(p.Down)
+func (t *DataMsgPipe) Length() int {
+	return len(t.Down)
 }

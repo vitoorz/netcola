@@ -64,6 +64,7 @@ func (t *PrivateTCPServer) Exit() bool {
 }
 
 func (t *PrivateTCPServer) serve() {
+	go t.writeConn()
 	for {
 		connect, err := t.Listener.AcceptTCP()
 		if err != nil {
@@ -74,7 +75,6 @@ func (t *PrivateTCPServer) serve() {
 		}
 		go t.readConn(connect)
 	}
-	go t.writeConn()
 }
 
 func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
@@ -87,7 +87,11 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 			return
 		}
 		logger.Info("read %d byte:%+v", n, data)
-		t.Output.Down <- dm.NewDataMsg("job", connection, 0, data)
+		if data[0] != 97 {
+			t.Output.Down <- dm.NewDataMsg("job", connection, 1, data)
+		} else {
+			t.Output.Down <- dm.NewDataMsg("job", connection, 2, data)
+		}
 	}
 }
 
@@ -95,11 +99,12 @@ func (t *PrivateTCPServer) writeConn() {
 
 	for {
 		select {
-		case data, ok := <-t.Down:
+		case data, ok := <-t.ReadDownChan():
 			if !ok {
 				logger.Info("Data Read error")
 				break
 			}
+			logger.Info("get msg from chan:%+v", data)
 			connection := data.Meta.(*net.TCPConn)
 			count, err := connection.Write(data.Payload.([]byte))
 			if err != nil {

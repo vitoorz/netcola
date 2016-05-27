@@ -9,8 +9,7 @@ import (
 func (t *engineType) Start(name string, bus *dm.DataMsgPipe) bool {
 	logger.Info("engine start running")
 	t.Name = name
-	t.BUS = bus
-	go t.engine(t.BUS)
+	go t.engine()
 	return true
 }
 
