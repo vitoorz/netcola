@@ -6,102 +6,85 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
-	. "service"
+	"service"
 	"time"
 )
 
 //should have no overlap with pre-defined control message type
+const ServiceName = "watcher"
+
 const (
-	watchCmdStartWatch = cm.ControlMsgMax + iota
-	watchCmdEndWatch
-	watchCmdSetPassTickHandler
+	Break = iota
+	Continue
+	Return
 )
 
-type PassTickHandler func(object string, watchedNanoSecond int64) (stopWatch bool)
-
-type Watcher struct {
-	service         *ServiceCommon
-	objects         map[string]int64
-	passTickHandler PassTickHandler
+type watcherType struct {
+	service.Service
+	objects map[string]int64
 }
 
-func NewWatcher() *Watcher {
-	w := &Watcher{
-		objects:         make(map[string]int64),
-		passTickHandler: printPProfAfter2Second,
-	}
-
-	s := NewServiceCommon(1e9, nil)
-	s.SetRealInstance(w)
-
-	w.service = s
-
-	w.service.SysHandler(cm.ControlMsgTick, handleOnTick)
-	w.service.SysHandler(watchCmdSetPassTickHandler, handleWatchSetPassTickHandler)
-	w.service.SysHandler(watchCmdStartWatch, handleWatchStart)
-	w.service.SysHandler(watchCmdEndWatch, handleWatchEnd)
-
-	return w
+func NewWatcher() *watcherType {
+	t := &watcherType{}
+	t.Service = *service.NewService(ServiceName)
+	t.BUS = nil
+	t.objects = make(map[string]int64)
+	return t
 }
 
-func (w *Watcher) WatchObjStart(obj string) {
-	w.service.HandleSysCmd(&cm.ControlMsg{watchCmdStartWatch, obj})
+func (t *watcherType) WatchObjStart(obj string) {
+	t.WriteCmdNonblock(&cm.ControlMsg{watchCmdStartWatch, obj})
 }
 
-func (w *Watcher) WatchObjOver(obj string) {
-	w.service.HandleSysCmd(&cm.ControlMsg{watchCmdEndWatch, obj})
+func (t *watcherType) WatchObjOver(obj string) {
+	t.WriteCmdNonblock(&cm.ControlMsg{watchCmdEndWatch, obj})
 }
 
-func (w *Watcher) SetWatcherHandler(obj PassTickHandler) {
-	w.service.HandleSysCmd(&cm.ControlMsg{watchCmdSetPassTickHandler, obj})
-}
+func (t *watcherType) watch() {
+	logger.Info("watcher service running")
 
-func (w *Watcher) Start() {
-	w.service.Start(nil)
-}
+	tickChan := time.NewTicker(time.Second).C
+	var next, fun int = Continue, service.FunUnknown
+	for {
+		select {
+		case <-tickChan:
+			t.onTick()
+			break
+		case msg, ok := <-t.Cmd:
+			if !ok {
+				logger.Info("Cmd Read error")
+				break
+			}
+			next, fun = t.ControlEntry(msg)
+			if fun != service.FunOK {
+				logger.Info("watcher control chan full")
+			}
+			break
+		}
 
-func (w *Watcher) Stop() {
-	w.service.Stop()
-}
-
-func (w *Watcher) Status() int {
-	return w.service.Status()
-}
-
-func handleWatchSetPassTickHandler(ws interface{}, code int, object interface{}) (int, interface{}) {
-	w := ws.(*Watcher)
-	w.passTickHandler = object.(PassTickHandler)
-	return 0, nil
-}
-
-func handleWatchStart(ws interface{}, code int, object interface{}) (int, interface{}) {
-	w := ws.(*Watcher)
-	w.objects[object.(string)] = time.Now().UnixNano()
-	return 0, nil
-}
-
-func handleWatchEnd(ws interface{}, code int, object interface{}) (int, interface{}) {
-	w := ws.(*Watcher)
-	delete(w.objects, object.(string))
-	return 0, nil
-}
-
-func handleOnTick(ws interface{}, code int, data interface{}) (int, interface{}) {
-	w := ws.(*Watcher)
-
-	curTime := time.Now().UTC().UnixNano()
-	for obj, startTime := range w.objects {
-		if w.passTickHandler(obj, curTime-startTime) {
-			delete(w.objects, obj)
+		switch next {
+		case Break:
+			break
+		case Return:
+			return
+		case Continue:
 		}
 	}
-
-	return 0, nil
+	return
 }
 
-func printPProfAfter2Second(object string, nanoSecond int64) bool {
-	logger.Warn("watched object %s for %ds %dns", object, nanoSecond/1e9, nanoSecond%1e9)
-	if nanoSecond >= 2e9 {
+func (t *watcherType) onTick() {
+	curTime := time.Now().Unix()
+	for obj, startTime := range t.objects {
+		if t.printPProfAfter2Second(obj, curTime-startTime) {
+			delete(t.objects, obj)
+		}
+	}
+}
+
+func (t *watcherType) printPProfAfter2Second(object string, time int64) bool {
+	logger.Warn("watched object %s for %d seconds", object, time)
+	if time >= 2 {
 		profile := pprof.Lookup("goroutine")
 
 		logger.Warn("%d goroutine(s) are currently in proccess, detail...", runtime.NumGoroutine())

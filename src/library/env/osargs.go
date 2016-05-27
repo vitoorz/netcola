@@ -16,8 +16,13 @@ func init() {
 		if len(kv) == 2 {
 			CmdArgs.Set(strings.Trim(kv[0], "-"), kv[1])
 		} else if strings.Contains(arg, "-") {
-			i = i + 1
-			CmdArgs.Set(strings.Trim(arg, "-"), os.Args[i])
+			k := strings.Trim(arg, "-")
+			if i == argc-1 || strings.Contains(os.Args[i+1], "-") {
+				CmdArgs.Set(k, true)
+			} else {
+				i = i + 1
+				CmdArgs.Set(k, os.Args[i])
+			}
 		} else {
 			CmdArgs.Set(arg, true)
 		}
