@@ -8,7 +8,7 @@ import (
 )
 
 func (t *jobType) Start(name string, bus *dm.DataMsgPipe) bool {
-	logger.Info("job start running")
+	logger.Info("%s:start running", t.Name)
 	t.Name = name
 	t.Output = bus
 	go t.job()
@@ -30,19 +30,19 @@ func (t *jobType) Exit() bool {
 func (t *jobType) controlEntry(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
-		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)
+		logger.Info("%s:ControlMsgPipe.Cmd Read %d", t.Name, msg.MsgType)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-		logger.Info("job exit")
+		logger.Info("%s:exit", t.Name)
 		return Return, service.FunOK
 	case cm.ControlMsgPause:
-		logger.Info("job paused")
+		logger.Info("%s:paused", t.Name)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgPause}
 		for {
 			var resume bool = false
 			select {
 			case msg, ok := <-t.Cmd:
 				if !ok {
-					logger.Info("Cmd Read error")
+					logger.Info("%s:Cmd Read error", t.Name)
 					break
 				}
 				switch msg.MsgType {
@@ -56,7 +56,7 @@ func (t *jobType) controlEntry(msg *cm.ControlMsg) (int, int) {
 				break
 			}
 		}
-		logger.Info("job resumed")
+		logger.Info("%s:resumed", t.Name)
 	}
 	return Continue, service.FunOK
 }

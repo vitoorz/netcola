@@ -22,5 +22,5 @@ const (
 	FunOK = iota
 	FunUnknown
 	FunPanic
-	FunDownChanFull
+	FunDataPipeFull
 )

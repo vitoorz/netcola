@@ -68,7 +68,7 @@ package service
 //}
 //
 //func (sc *ServiceCommon) Handle(msg *dm.DataMsg) {
-//	sc.pipe.WriteDownChanNB(msg)
+//	sc.pipe.WriteDataPipeNB(msg)
 //}
 //
 //func (sc *ServiceCommon) Start(pipe *dm.DataMsgPipe) {
@@ -88,7 +88,7 @@ package service
 //					continue
 //				}
 //				sc.handleSysCmd(cmd.MsgType, cmd.Payload)
-//			case userMsg, okUser := <-sc.pipe.ReadDownChan():
+//			case userMsg, okUser := <-sc.pipe.ReadDataPipe():
 //				if !okUser {
 //					continue
 //				}

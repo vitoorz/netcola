@@ -8,7 +8,9 @@ import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
+	"service/job/task"
 	//ts "types/service"
+	"types"
 )
 
 func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
@@ -21,21 +23,20 @@ func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 		funCode = service.FunPanic
 	}()
 
-	logger.Info("job: data msg:%+v,payload:%s", msg, msg.Payload.([]byte))
+	logger.Info("%s:get data msg:%d,payload:%v", t.Name, msg.MsgType, msg.Payload.([]byte))
 
 	switch msg.MsgType {
-	case 1:
-		msg.Receiver = "tcpserver"
-	case 2:
-
+	case types.MsgTypeTelnet:
+		choosetask := task.Parse(string(msg.Payload.([]byte)))
+		task.Route[choosetask](msg)
 	}
 
-	//service.ServicePool.SendDown(msg)
-	ok := t.Output.WritePipeNB(msg)
-	if !ok {
-		// channel full
-		return Continue, service.FunDownChanFull
+	if msg.Payload != nil {
+		ok := t.Output.WritePipeNB(msg)
+		if !ok {
+			// channel full
+			return Continue, service.FunDataPipeFull
+		}
 	}
 	return Continue, service.FunOK
-
 }

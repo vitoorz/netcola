@@ -10,7 +10,8 @@ import (
 	"library/logger"
 	"service"
 	"time"
-	ts "types/service"
+
+	"types"
 )
 
 const ServiceName = "privatetcpserver"
@@ -79,22 +80,25 @@ func (t *PrivateTCPServer) serve() {
 }
 
 func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
+
 	for {
-		data := make([]byte, 1)
-		n, err := io.ReadAtLeast(connection, data, 1)
-		if err != nil {
-			logger.Warn("read byte:%d,error:%s", n, err.Error())
-			connection.Close()
-			return
+		var stream []byte
+		for {
+			data := make([]byte, 1)
+			n, err := io.ReadAtLeast(connection, data, 1)
+			if err != nil {
+				logger.Warn("read byte:%d,error:%s", n, err.Error())
+				connection.Close()
+				return
+			}
+			if data[0] == 10 {
+				break
+			} else {
+				stream = append(stream, data...)
+			}
 		}
-		logger.Info("read %d byte:%+v", n, data)
 		var d *dm.DataMsg
-		if data[0] != 97 {
-			d = dm.NewDataMsg("job", 1, data)
-		} else {
-			d = dm.NewDataMsg("timer", 2, data)
-			d.SetMeta("timer", ts.Event{When: time.Now().Unix() + 5})
-		}
+		d = dm.NewDataMsg("job", types.MsgTypeTelnet, stream)
 		d.SetMeta(t.Name, connection)
 		t.Output.WritePipeNB(d)
 	}
@@ -106,23 +110,24 @@ func (t *PrivateTCPServer) writeConn() {
 		select {
 		case data, ok := <-t.ReadPipe():
 			if !ok {
-				logger.Info("Data Read error")
+				logger.Info("%s:Data Read error", t.Name)
 				break
 			}
-			logger.Info("get msg from chan:%+v", data)
+			logger.Debug("%s:get msg from chan:%+v", t.Name, data)
 			meta, ok := data.Meta(t.Name)
 			if !ok {
-				logger.Error("wrong meta in datamsg:%+v", data)
+				logger.Error("%s:wrong meta in datamsg:%+v", t.Name, data)
 				break
 			}
 			connection := meta.(*net.TCPConn)
+			//todo: need to verify if the data payload is []byte
 			count, err := connection.Write(data.Payload.([]byte))
 			if err != nil {
-				logger.Warn("conn write err:%s", err.Error())
+				logger.Warn("%s:conn write err:%s", t.Name, err.Error())
 				connection.Close()
 				return
 			} else {
-				logger.Info("sent to network:%d byte", count)
+				logger.Info("%s:sent to network:%d byte", t.Name, count)
 			}
 		}
 	}

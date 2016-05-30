@@ -7,14 +7,14 @@ import (
 )
 
 func (t *engineType) Start(name string, bus *dm.DataMsgPipe) bool {
-	logger.Info("engine start running")
+	logger.Info("%s:start running", t.Name)
 	t.Name = name
 	go t.engine()
 	return true
 }
 
 func (t *engineType) Pause() bool {
-	logger.Info("engine will pause")
+	logger.Info("%s:will pause", t.Name)
 	t.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgPause}
 	echo := <-t.Echo
 	if echo.MsgType != cm.ControlMsgPause {
@@ -24,7 +24,7 @@ func (t *engineType) Pause() bool {
 }
 
 func (t *engineType) Resume() bool {
-	logger.Info("engine will resume")
+	logger.Info("%s:will resume", t.Name)
 	t.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgResume}
 	echo := <-t.Echo
 	if echo.MsgType != cm.ControlMsgResume {
@@ -34,7 +34,7 @@ func (t *engineType) Resume() bool {
 }
 
 func (t *engineType) Exit() bool {
-	logger.Info("engine will exit")
+	logger.Info("%s:will exit", t.Name)
 	t.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 	echo := <-t.Echo
 	if echo.MsgType != cm.ControlMsgExit {
@@ -46,19 +46,19 @@ func (t *engineType) Exit() bool {
 func (t *engineType) controlEntry(msg *cm.ControlMsg) (int, bool) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
-		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)
+		logger.Info("%s:ControlMsgPipe.Cmd Read %d", t.Name, msg.MsgType)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-		logger.Info("engine exit")
+		logger.Info("%s:exit", t.Name)
 		return Return, true
 	case cm.ControlMsgPause:
-		logger.Info("engine paused")
+		logger.Info("%s:paused", t.Name)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgPause}
 		for {
 			var resume bool = false
 			select {
 			case msg, ok := <-t.Cmd:
 				if !ok {
-					logger.Info("Cmd Read error")
+					logger.Info("%s:Cmd Read error", t.Name)
 					break
 				}
 				switch msg.MsgType {
@@ -72,7 +72,7 @@ func (t *engineType) controlEntry(msg *cm.ControlMsg) (int, bool) {
 				break
 			}
 		}
-		logger.Info("engine resumed")
+		logger.Info("%s:resumed", t.Name)
 	}
 	return Continue, true
 }

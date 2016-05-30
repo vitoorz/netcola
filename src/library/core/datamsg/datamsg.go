@@ -3,7 +3,7 @@ package datamsg
 type DataMsg struct {
 	Receiver string
 	meta     map[string]interface{}
-	MsgType  int
+	MsgType  int //? can it be integrated to meta?
 	Next     *DataMsg
 	Payload  interface{}
 }

@@ -27,34 +27,34 @@ func NewEngine() *engineType {
 }
 
 func (t *engineType) engine() {
-	logger.Info("engine service running")
+	logger.Info("%s:service running", t.Name)
 
 	var next, fun int = Continue, service.FunUnknown
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
 			if !ok {
-				logger.Info("Cmd Read error")
+				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
 			next, ok = t.controlEntry(msg)
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
-				logger.Info("DownChan Read error")
+				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
 			next, fun = t.dataEntry(msg)
 			break
 		case msg, ok := <-t.BUS.ReadPipe():
 			if !ok {
-				logger.Info("DownChan Read error")
+				logger.Info("DataPipe Read error", t.Name)
 				break
 			}
-			logger.Info("read bus chan msg:%+v", msg)
+			logger.Debug("%s:read bus chan msg:%+v", t.Name, msg)
 			next, fun = t.BusSchedule(msg)
-			if fun == service.FunDownChanFull {
-				logger.Warn("need do something when full")
+			if fun == service.FunDataPipeFull {
+				logger.Warn("%s:need do something when full", t.Name)
 			}
 			break
 		}

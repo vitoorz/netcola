@@ -15,6 +15,7 @@ const (
 )
 
 var l Logger = log.New(os.Stdout, "", log.LstdFlags)
+var debugSwitch bool = false
 
 type Logger interface {
 	Printf(format string, args ...interface{})
@@ -25,7 +26,9 @@ func SetLogger(new Logger) {
 }
 
 func Debug(format string, args ...interface{}) {
-	l.Printf(debug+format, args...)
+	if debugSwitch {
+		l.Printf(debug+format, args...)
+	}
 }
 
 func Info(format string, args ...interface{}) {
@@ -54,4 +57,8 @@ func Stack() {
 		buf = make([]byte, 2*len(buf))
 	}
 	l.Printf(info + string(buf))
+}
+
+func EnableDebugLog(s bool) {
+	debugSwitch = s
 }

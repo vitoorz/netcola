@@ -4,6 +4,7 @@ import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
+	"service/timer/task"
 	"time"
 	ts "types/service"
 )
@@ -40,14 +41,11 @@ func (t *timerType) callBack(e ts.Event, msg *dm.DataMsg) {
 	go func() {
 		wakeAt := <-e.TimerObject.C
 		logger.Info("event wake up:at:%s", wakeAt.String())
-		msg.Receiver = "tcpserver"
-		filo := msg.Payload.([]byte)
-		filo[0] = 99
-		//service.ServicePool.SendDown(msg)
+		task.DoLater(msg)
 		ok := t.Output.WritePipeNB(msg)
 		if !ok {
 			// channel full
-			//return Continue, service.FunDownChanFull
+			//return Continue, service.FunDataPipeFull
 		}
 	}()
 }

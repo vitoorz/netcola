@@ -40,8 +40,7 @@ func (t *watcherType) WatchObjOver(obj string) {
 }
 
 func (t *watcherType) watch() {
-	logger.Info("watcher service running")
-
+	logger.Info("%s:service running", t.Name)
 	tickChan := time.NewTicker(time.Second).C
 	var next, fun int = Continue, service.FunUnknown
 	for {

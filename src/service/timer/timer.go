@@ -30,8 +30,7 @@ func NewTimer() *timerType {
 }
 
 func (t *timerType) timer() {
-	logger.Info("timer service running")
-
+	logger.Info("%s:service running", t.Name)
 	var next, fun int = Continue, service.FunUnknown
 	for {
 		select {
@@ -48,7 +47,7 @@ func (t *timerType) timer() {
 				break
 			}
 			next, fun = t.dataEntry(msg)
-			if fun == service.FunDownChanFull {
+			if fun == service.FunDataPipeFull {
 				logger.Warn("need do something when full")
 			}
 			break
