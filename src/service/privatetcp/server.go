@@ -87,11 +87,14 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 			return
 		}
 		logger.Info("read %d byte:%+v", n, data)
+		var d *dm.DataMsg
 		if data[0] != 97 {
-			t.Output.WritePipeNB(dm.NewDataMsg("job", connection, 1, data))
+			d = dm.NewDataMsg("job", 1, data)
 		} else {
-			t.Output.WritePipeNB(dm.NewDataMsg("job", connection, 2, data))
+			d = dm.NewDataMsg("job", 2, data)
 		}
+		d.SetMeta(t.ID, connection)
+		t.Output.WritePipeNB(d)
 	}
 }
 
@@ -105,7 +108,12 @@ func (t *PrivateTCPServer) writeConn() {
 				break
 			}
 			logger.Info("get msg from chan:%+v", data)
-			connection := data.Meta.(*net.TCPConn)
+			meta, ok := data.Meta[t.ID]
+			if !ok {
+				logger.Error("wrong meta in datamsg:%+v", data)
+				break
+			}
+			connection := meta.(*net.TCPConn)
 			count, err := connection.Write(data.Payload.([]byte))
 			if err != nil {
 				logger.Warn("conn write err:%s", err.Error())

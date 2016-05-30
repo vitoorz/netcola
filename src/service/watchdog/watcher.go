@@ -27,7 +27,6 @@ type watcherType struct {
 func NewWatcher() *watcherType {
 	t := &watcherType{}
 	t.Service = *service.NewService(ServiceName)
-	t.BUS = nil
 	t.objects = make(map[string]int64)
 	return t
 }

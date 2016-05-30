@@ -2,6 +2,7 @@ package timer
 
 import (
 	dm "library/core/datamsg"
+	"library/idgen"
 	"library/logger"
 	"service"
 )
@@ -16,13 +17,15 @@ const (
 
 type timerType struct {
 	service.Service
-	Output *dm.DataMsgPipe
+	Output    *dm.DataMsgPipe
+	timerPool map[idgen.ObjectID]*dm.DataMsg
 }
 
 func NewTimer() *timerType {
 	t := &timerType{}
 	t.Service = *service.NewService(ServiceName)
 	t.Output = nil
+	t.timerPool = make(map[idgen.ObjectID]*dm.DataMsg)
 	return t
 }
 

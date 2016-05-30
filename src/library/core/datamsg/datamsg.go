@@ -1,40 +1,47 @@
 package datamsg
 
+import (
+	"library/idgen"
+)
+
 type DataMsg struct {
 	Receiver string
-	Meta     interface{}
+	Meta     map[idgen.ObjectID]interface{}
 	MsgType  int
 	Next     *DataMsg
 	Payload  interface{}
 }
 
-func NewDataMsg(recv string, meta interface{},
-	msgtype int, payload interface{}) *DataMsg {
+func NewDataMsg(recv string, msgtype int, payload interface{}) *DataMsg {
 	var msg = &DataMsg{
 		MsgType:  msgtype,
 		Receiver: recv,
-		Meta:     meta,
+		Meta:     make(map[idgen.ObjectID]interface{}),
 		Next:     nil,
 		Payload:  payload,
 	}
 	return msg
 }
 
-func (p *DataMsg) PushBack(n *DataMsg) (h *DataMsg) {
-	if p == nil {
+func (t *DataMsg) SetMeta(id idgen.ObjectID, meta interface{}) {
+	t.Meta[id] = meta
+}
+
+func (t *DataMsg) PushBack(n *DataMsg) (d *DataMsg) {
+	if t == nil {
 		return n
 	}
-	m := p
+	m := t
 	for ; m.Next != nil; m = m.Next {
 	}
 	m.Next = n
-	return p
+	return t
 }
 
-func (p *DataMsg) PushFront(n *DataMsg) (h *DataMsg) {
+func (t *DataMsg) PushFront(n *DataMsg) (d *DataMsg) {
 	if n == nil {
-		return p
+		return t
 	}
-	n.Next = p
+	n.Next = t
 	return n
 }
