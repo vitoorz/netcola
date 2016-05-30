@@ -27,7 +27,7 @@ func (t *jobType) Exit() bool {
 	return true
 }
 
-func (t *jobType) ControlEntry(msg *cm.ControlMsg) (int, int) {
+func (t *jobType) controlEntry(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)

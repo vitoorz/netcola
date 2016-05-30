@@ -1,12 +1,17 @@
 package job
 
 import (
+//"time"
+)
+
+import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
+	//ts "types/service"
 )
 
-func (t *jobType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
+func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	defer func() {
 		if x := recover(); x != nil {
 			logger.Error("job panic: %v", x)
@@ -22,7 +27,7 @@ func (t *jobType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	case 1:
 		msg.Receiver = "tcpserver"
 	case 2:
-		msg.Receiver = "timer"
+
 	}
 
 	//service.ServicePool.SendDown(msg)

@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-type event struct {
+type Event struct {
 	TimerObject *time.Timer
-	Callback    func()
-	WakeTime    uint64
+	//Callback    func(interface{}) interface{}
+	When int64
 }

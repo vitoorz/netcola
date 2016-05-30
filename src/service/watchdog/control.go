@@ -33,7 +33,7 @@ func (t *watcherType) Exit() bool {
 	return true
 }
 
-func (t *watcherType) ControlEntry(msg *cm.ControlMsg) (int, int) {
+func (t *watcherType) controlEntry(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)

@@ -30,6 +30,10 @@ func stopAndCleanMemory() {
 
 func main() {
 	logger.Info("main start")
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		logger.Warn("Only tested in linux and mac os operating system, be carefally using in %v", runtime.GOOS)
+	}
+
 	rand.Seed(time.Now().UTC().Unix())
 
 	idgen.InitIDGen("1")

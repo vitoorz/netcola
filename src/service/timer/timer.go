@@ -40,14 +40,14 @@ func (t *timerType) timer() {
 				logger.Info("Cmd Read error")
 				break
 			}
-			next, fun = t.ControlEntry(msg)
+			next, fun = t.controlEntry(msg)
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("Data Read error")
 				break
 			}
-			next, fun = t.DataEntry(msg)
+			next, fun = t.dataEntry(msg)
 			if fun == service.FunDownChanFull {
 				logger.Warn("need do something when full")
 			}

@@ -37,7 +37,7 @@ func (t *jobType) job() {
 				logger.Info("Data Read error")
 				break
 			}
-			next, fun = t.DataEntry(msg)
+			next, fun = t.dataEntry(msg)
 			if fun == service.FunDownChanFull {
 				logger.Warn("need do something when full")
 			}
@@ -47,7 +47,7 @@ func (t *jobType) job() {
 				logger.Info("Cmd Read error")
 				break
 			}
-			next, fun = t.ControlEntry(msg)
+			next, fun = t.controlEntry(msg)
 			break
 		}
 

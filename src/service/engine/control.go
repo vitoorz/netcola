@@ -43,7 +43,7 @@ func (t *engineType) Exit() bool {
 	return true
 }
 
-func (t *engineType) ControlEntry(msg *cm.ControlMsg) (int, bool) {
+func (t *engineType) controlEntry(msg *cm.ControlMsg) (int, bool) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)

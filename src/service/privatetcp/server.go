@@ -10,6 +10,7 @@ import (
 	"library/logger"
 	"service"
 	"time"
+	ts "types/service"
 )
 
 const ServiceName = "privatetcpserver"
@@ -91,9 +92,10 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 		if data[0] != 97 {
 			d = dm.NewDataMsg("job", 1, data)
 		} else {
-			d = dm.NewDataMsg("job", 2, data)
+			d = dm.NewDataMsg("timer", 2, data)
+			d.SetMeta("timer", ts.Event{When: time.Now().Unix() + 5})
 		}
-		d.SetMeta(t.ID, connection)
+		d.SetMeta(t.Name, connection)
 		t.Output.WritePipeNB(d)
 	}
 }
@@ -108,7 +110,7 @@ func (t *PrivateTCPServer) writeConn() {
 				break
 			}
 			logger.Info("get msg from chan:%+v", data)
-			meta, ok := data.Meta[t.ID]
+			meta, ok := data.Meta(t.Name)
 			if !ok {
 				logger.Error("wrong meta in datamsg:%+v", data)
 				break
