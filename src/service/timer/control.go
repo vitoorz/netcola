@@ -11,7 +11,7 @@ func (t *timerType) Start(name string, bus *dm.DataMsgPipe) bool {
 	logger.Info("timer start running")
 	t.Name = name
 	t.Output = bus
-	go t.job()
+	go t.timer()
 	return true
 }
 

@@ -26,7 +26,7 @@ func NewTimer() *timerType {
 	return t
 }
 
-func (t *timerType) job() {
+func (t *timerType) timer() {
 	logger.Info("timer service running")
 
 	var next, fun int = Continue, service.FunUnknown
@@ -39,7 +39,7 @@ func (t *timerType) job() {
 			}
 			next, fun = t.ControlEntry(msg)
 			break
-		case msg, ok := <-t.ReadDownChan():
+		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("Data Read error")
 				break

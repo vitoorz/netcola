@@ -39,14 +39,14 @@ func (t *engineType) engine() {
 			}
 			next, ok = t.ControlEntry(msg)
 			break
-		case msg, ok := <-t.ReadDownChan():
+		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("DownChan Read error")
 				break
 			}
 			next, fun = t.DataEntry(msg)
 			break
-		case msg, ok := <-t.BUS.ReadDownChan():
+		case msg, ok := <-t.BUS.ReadPipe():
 			if !ok {
 				logger.Info("DownChan Read error")
 				break

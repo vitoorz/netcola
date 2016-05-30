@@ -88,9 +88,9 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 		}
 		logger.Info("read %d byte:%+v", n, data)
 		if data[0] != 97 {
-			t.Output.Down <- dm.NewDataMsg("job", connection, 1, data)
+			t.Output.WritePipeNB(dm.NewDataMsg("job", connection, 1, data))
 		} else {
-			t.Output.Down <- dm.NewDataMsg("job", connection, 2, data)
+			t.Output.WritePipeNB(dm.NewDataMsg("job", connection, 2, data))
 		}
 	}
 }
@@ -99,7 +99,7 @@ func (t *PrivateTCPServer) writeConn() {
 
 	for {
 		select {
-		case data, ok := <-t.ReadDownChan():
+		case data, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("Data Read error")
 				break

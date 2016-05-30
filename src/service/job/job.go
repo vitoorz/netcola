@@ -32,7 +32,7 @@ func (t *jobType) job() {
 	var next, fun int = Continue, service.FunUnknown
 	for {
 		select {
-		case msg, ok := <-t.ReadDownChan():
+		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("Data Read error")
 				break

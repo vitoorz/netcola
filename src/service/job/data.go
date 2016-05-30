@@ -26,7 +26,7 @@ func (t *jobType) DataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	}
 
 	//service.ServicePool.SendDown(msg)
-	ok := t.Output.WriteDownChanNB(msg)
+	ok := t.Output.WritePipeNB(msg)
 	if !ok {
 		// channel full
 		return Continue, service.FunDownChanFull

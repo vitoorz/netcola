@@ -66,7 +66,7 @@ func (t *ServiceManager) SendDown(msg *dm.DataMsg) error {
 	if !ok {
 		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
 	}
-	s.Self().DataMsgPipe.WriteDownChanNB(msg)
+	s.Self().DataMsgPipe.WritePipeNB(msg)
 
 	return nil
 }
