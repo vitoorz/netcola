@@ -1,12 +1,13 @@
-package job
+package mongo
 
 import (
+	mgo "gopkg.in/mgo.v2"
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
 )
 
-const ServiceName = "job"
+const ServiceName = "mongo"
 
 const (
 	Break = iota
@@ -14,22 +15,36 @@ const (
 	Return
 )
 
-type jobType struct {
+type mongoType struct {
 	service.Service
-	Output *dm.DataMsgPipe
+	output *dm.DataMsgPipe
+
+	ip        string
+	port      string
+	db        string
+	session   *mgo.Session
+	dirtyPool *DirtyPool
 }
 
-func NewJob(name string) *jobType {
-	t := &jobType{}
+func NewMongo(name, ip, port, db string) *mongoType {
+	t := &mongoType{}
 	t.Service = *service.NewService(ServiceName)
-	t.Output = nil
 	t.Name = name
+	t.output = nil
+	t.ip = ip
+	t.port = port
+	t.db = db
+	t.session = nil
+	t.dirtyPool = NewDirtyPool()
 	return t
 }
 
-func (t *jobType) job() {
+func (t *mongoType) mongo() {
 	logger.Info("%s:service running", t.Name)
 	var next, fun int = Continue, service.FunUnknown
+	//todo , dial first?
+
+	go t.dirtyPool.recycleDaemon()
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -41,9 +56,10 @@ func (t *jobType) job() {
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
-				logger.Info("%sData Read error", t.Name)
+				logger.Info("%s:Data Read error", t.Name)
 				break
 			}
+
 			next, fun = t.dataEntry(msg)
 			if fun == service.FunDataPipeFull {
 				logger.Warn("%s:need do something when full", t.Name)

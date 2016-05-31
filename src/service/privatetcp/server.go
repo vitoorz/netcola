@@ -16,61 +16,63 @@ import (
 
 const ServiceName = "privatetcpserver"
 
-type PrivateTCPServer struct {
+type privateTCPServer struct {
 	service.Service
-	Listener *net.TCPListener
-	Output   *dm.DataMsgPipe
-	IP       string
-	Port     string
+	output *dm.DataMsgPipe
+
+	listener *net.TCPListener
+	ip       string
+	port     string
 }
 
-func NewPrivateTCPServer() *PrivateTCPServer {
-	t := &PrivateTCPServer{}
+func NewPrivateTCPServer(name, ip, port string) *privateTCPServer {
+	t := &privateTCPServer{}
 	t.Service = *service.NewService(ServiceName)
-	t.IP = "0.0.0.0"
-	t.Port = "7171"
+	t.output = nil
+	t.Name = name
+	t.ip = ip
+	t.port = port
 	return t
 }
 
-func (t *PrivateTCPServer) Start(name string, bus *dm.DataMsgPipe) bool {
-	logger.Info("Start PrivateTCPServer")
-	t.Name = name
-	t.Output = bus
-	tcpAddr, err := net.ResolveTCPAddr("tcp", t.IP+":"+t.Port)
+func (t *privateTCPServer) Start(bus *dm.DataMsgPipe) bool {
+	logger.Info("%s:Start privateTCPServer", t.Name)
+	t.output = bus
+	tcpAddr, err := net.ResolveTCPAddr("tcp", t.ip+":"+t.port)
 	if err != nil {
-		logger.Error("net.ResolveTCPAddr error,%s", err.Error())
+		logger.Error("%s:net.ResolveTCPAddr error,%s", t.Name, err.Error())
 		return false
 	}
 
-	t.Listener, err = net.ListenTCP("tcp", tcpAddr)
+	t.listener, err = net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
-		logger.Error("net.ListenTCP error,%s", err.Error())
+		logger.Error("%s:net.ListenTCP error,%s", t.Name, err.Error())
 		return false
 	}
 
-	logger.Info("listening port:%s", t.Port)
+	logger.Info("%s:listening port:%s", t.Name, t.port)
 	go t.serve()
 	return true
 }
 
-func (t *PrivateTCPServer) Pause() bool {
+func (t *privateTCPServer) Pause() bool {
 	return true
 }
 
-func (t *PrivateTCPServer) Resume() bool {
+func (t *privateTCPServer) Resume() bool {
 	return true
 }
 
-func (t *PrivateTCPServer) Exit() bool {
+func (t *privateTCPServer) Exit() bool {
 	return true
 }
 
-func (t *PrivateTCPServer) serve() {
+func (t *privateTCPServer) serve() {
 	go t.writeConn()
 	for {
-		connect, err := t.Listener.AcceptTCP()
+		connect, err := t.listener.AcceptTCP()
 		if err != nil {
-			logger.Error("listener.AcceptTCP error,%s", err.Error())
+			logger.Error("%s:listener.AcceptTCP error,%s", t.Name, err.Error())
 			time.Sleep(time.Second * 2)
 			connect.Close()
 			continue
@@ -79,7 +81,7 @@ func (t *PrivateTCPServer) serve() {
 	}
 }
 
-func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
+func (t *privateTCPServer) readConn(connection *net.TCPConn) {
 
 	for {
 		var stream []byte
@@ -87,7 +89,7 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 			data := make([]byte, 1)
 			n, err := io.ReadAtLeast(connection, data, 1)
 			if err != nil {
-				logger.Warn("read byte:%d,error:%s", n, err.Error())
+				logger.Warn("%s:read byte:%d,error:%s", t.Name, n, err.Error())
 				connection.Close()
 				return
 			}
@@ -100,11 +102,11 @@ func (t *PrivateTCPServer) readConn(connection *net.TCPConn) {
 		var d *dm.DataMsg
 		d = dm.NewDataMsg("job", types.MsgTypeTelnet, stream)
 		d.SetMeta(t.Name, connection)
-		t.Output.WritePipeNB(d)
+		t.output.WritePipeNB(d)
 	}
 }
 
-func (t *PrivateTCPServer) writeConn() {
+func (t *privateTCPServer) writeConn() {
 
 	for {
 		select {

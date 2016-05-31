@@ -6,9 +6,8 @@ import (
 	"library/logger"
 )
 
-func (t *engineType) Start(name string, bus *dm.DataMsgPipe) bool {
+func (t *engineType) Start(bus *dm.DataMsgPipe) bool {
 	logger.Info("%s:start running", t.Name)
-	t.Name = name
 	go t.engine()
 	return true
 }

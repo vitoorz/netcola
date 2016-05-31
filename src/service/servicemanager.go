@@ -51,8 +51,8 @@ func (t *ServiceManager) Register(service IService) error {
 	return nil
 }
 
-func StartService(s IService, name string, bus *dm.DataMsgPipe) bool {
-	if s.Start(name, bus) {
+func StartService(s IService, bus *dm.DataMsgPipe) bool {
+	if s.Start(bus) {
 		ServicePool.Register(s)
 		return true
 	} else {

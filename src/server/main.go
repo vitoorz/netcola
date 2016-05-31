@@ -15,6 +15,7 @@ import (
 	"service"
 	"service/engine"
 	"service/job"
+	"service/mongo"
 	"service/privatetcp"
 	"service/timer"
 )
@@ -44,17 +45,20 @@ func main() {
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 
-	enginesrv := engine.NewEngine()
-	service.StartService(enginesrv, "engine", nil)
+	enginesrv := engine.NewEngine("engine")
+	service.StartService(enginesrv, nil)
 
-	tcpsrv := privatetcp.NewPrivateTCPServer()
-	service.StartService(tcpsrv, "tcpserver", enginesrv.BUS)
+	jobsrv := job.NewJob("job")
+	service.StartService(jobsrv, enginesrv.BUS)
 
-	jobsrv := job.NewJob()
-	service.StartService(jobsrv, "job", enginesrv.BUS)
+	timersrv := timer.NewTimer("timer")
+	service.StartService(timersrv, enginesrv.BUS)
 
-	timersrv := timer.NewTimer()
-	service.StartService(timersrv, "timer", enginesrv.BUS)
+	mongosrv := mongo.NewMongo("mongo", "127.0.0.1", "27017", "test")
+	service.StartService(mongosrv, enginesrv.BUS)
+
+	tcpsrv := privatetcp.NewPrivateTCPServer("tcpserver", "0.0.0.0", "7171")
+	service.StartService(tcpsrv, enginesrv.BUS)
 
 	for {
 		select {

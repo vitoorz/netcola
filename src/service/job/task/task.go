@@ -49,3 +49,8 @@ func doLater(in *dm.DataMsg) {
 	in.SetMeta("timer", ts.Event{When: time.Now().Unix() + 5})
 	in.Receiver = "timer"
 }
+
+func doMongoInsert(in *dm.DataMsg) {
+	in.SetMeta("mongo", ts.MongoDirty{Action: ts.MongoActionCreate})
+	in.Receiver = "mongo"
+}

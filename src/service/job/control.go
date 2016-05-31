@@ -7,9 +7,8 @@ import (
 	"service"
 )
 
-func (t *jobType) Start(name string, bus *dm.DataMsgPipe) bool {
+func (t *jobType) Start(bus *dm.DataMsgPipe) bool {
 	logger.Info("%s:start running", t.Name)
-	t.Name = name
 	t.Output = bus
 	go t.job()
 	return true

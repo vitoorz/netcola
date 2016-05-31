@@ -13,10 +13,8 @@ const (
 	watchCmdEndWatch
 )
 
-func (t *watcherType) Start(name string, bus *dm.DataMsgPipe) bool {
+func (t *watcherType) Start(bus *dm.DataMsgPipe) bool {
 	logger.Info("watcher start running")
-	t.Name = name
-	t.BUS = bus
 	go t.watch()
 	return true
 }

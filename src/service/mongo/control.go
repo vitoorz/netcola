@@ -1,4 +1,4 @@
-package timer
+package mongo
 
 import (
 	cm "library/core/controlmsg"
@@ -7,26 +7,26 @@ import (
 	"service"
 )
 
-func (t *timerType) Start(bus *dm.DataMsgPipe) bool {
+func (t *mongoType) Start(bus *dm.DataMsgPipe) bool {
 	logger.Info("%s:start running", t.Name)
-	t.Output = bus
-	go t.timer()
+	t.output = bus
+	go t.mongo()
 	return true
 }
 
-func (t *timerType) Pause() bool {
+func (t *mongoType) Pause() bool {
 	return true
 }
 
-func (t *timerType) Resume() bool {
+func (t *mongoType) Resume() bool {
 	return true
 }
 
-func (t *timerType) Exit() bool {
+func (t *mongoType) Exit() bool {
 	return true
 }
 
-func (t *timerType) controlEntry(msg *cm.ControlMsg) (int, int) {
+func (t *mongoType) controlEntry(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("%s:ControlMsgPipe.Cmd Read %d", t.Name, msg.MsgType)

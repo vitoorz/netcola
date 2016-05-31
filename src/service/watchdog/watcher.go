@@ -24,10 +24,11 @@ type watcherType struct {
 	objects map[string]int64
 }
 
-func NewWatcher() *watcherType {
+func NewWatcher(name string) *watcherType {
 	t := &watcherType{}
 	t.Service = *service.NewService(ServiceName)
 	t.objects = make(map[string]int64)
+	t.Name = name
 	return t
 }
 

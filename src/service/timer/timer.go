@@ -21,10 +21,11 @@ type timerType struct {
 	timerPool map[idgen.ObjectID]*dm.DataMsg
 }
 
-func NewTimer() *timerType {
+func NewTimer(name string) *timerType {
 	t := &timerType{}
 	t.Service = *service.NewService(ServiceName)
 	t.Output = nil
+	t.Name = name
 	t.timerPool = make(map[idgen.ObjectID]*dm.DataMsg)
 	return t
 }
