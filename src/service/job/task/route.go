@@ -11,17 +11,19 @@ const (
 	taskInfo
 	taskHelp
 	taskLater
+	taskMongoCreate
 )
 
 func doNothing(in *dm.DataMsg) {
-	in.Payload = nil
+	in.Receiver = dm.NoReceiver
 }
 
 var Route = map[int](func(*dm.DataMsg)){
-	taskUnknown: doNothing,
-	taskExit:    doExit,
-	taskGetNow:  doGetNow,
-	taskInfo:    doInfo,
-	taskHelp:    doHelp,
-	taskLater:   doLater,
+	taskUnknown:     doNothing,
+	taskExit:        doExit,
+	taskGetNow:      doGetNow,
+	taskInfo:        doInfo,
+	taskHelp:        doHelp,
+	taskLater:       doLater,
+	taskMongoCreate: doMongoCreate,
 }

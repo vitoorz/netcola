@@ -18,5 +18,8 @@ func Parse(in string) int {
 	if strings.Contains(in, "help") {
 		return taskHelp
 	}
+	if strings.Contains(in, "mongow") {
+		return taskMongoCreate
+	}
 	return taskUnknown
 }

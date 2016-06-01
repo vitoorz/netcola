@@ -100,7 +100,7 @@ func (t *privateTCPServer) readConn(connection *net.TCPConn) {
 			}
 		}
 		var d *dm.DataMsg
-		d = dm.NewDataMsg("job", types.MsgTypeTelnet, stream)
+		d = dm.NewDataMsg("tcpserver", "job", types.MsgTypeTelnet, stream)
 		d.SetMeta(t.Name, connection)
 		t.output.WritePipeNB(d)
 	}

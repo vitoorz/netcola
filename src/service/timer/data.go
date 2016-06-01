@@ -42,6 +42,7 @@ func (t *timerType) callBack(e ts.Event, msg *dm.DataMsg) {
 		wakeAt := <-e.TimerObject.C
 		logger.Info("event wake up:at:%s", wakeAt.String())
 		task.DoLater(msg)
+		msg.Sender = t.Name
 		ok := t.Output.WritePipeNB(msg)
 		if !ok {
 			// channel full

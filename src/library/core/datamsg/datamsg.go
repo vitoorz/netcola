@@ -1,17 +1,23 @@
 package datamsg
 
+const (
+	NoReceiver = "NoReceiver"
+)
+
 type DataMsg struct {
+	Sender   string
 	Receiver string
 	meta     map[string]interface{}
 	MsgType  int //? can it be integrated to meta?
-	Next     *DataMsg
 	Payload  interface{}
+	Next     *DataMsg
 }
 
-func NewDataMsg(recv string, msgtype int, payload interface{}) *DataMsg {
+func NewDataMsg(sender, recv string, msgtype int, payload interface{}) *DataMsg {
 	var msg = &DataMsg{
-		MsgType:  msgtype,
+		Sender:   sender,
 		Receiver: recv,
+		MsgType:  msgtype,
 		meta:     make(map[string]interface{}),
 		Next:     nil,
 		Payload:  payload,

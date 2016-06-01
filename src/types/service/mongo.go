@@ -11,15 +11,12 @@ const (
 	MongoActionDelete  MongoCRUD = 4
 )
 
-type MongoDirty struct {
-	Action MongoCRUD
-	dirty
-}
+//type Dirty struct {
+//	Action MongoCRUD
+//}
 
-type dirty interface {
-	Create() bool
-	Read() bool
-	Update() bool
-	Delete() bool
+type Dirty interface {
+	CRUD() bool
     Inspect() string
+
 }

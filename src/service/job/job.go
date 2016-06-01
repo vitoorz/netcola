@@ -41,7 +41,7 @@ func (t *jobType) job() {
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
-				logger.Info("%sData Read error", t.Name)
+				logger.Info("%s:Data Read error", t.Name)
 				break
 			}
 			next, fun = t.dataEntry(msg)

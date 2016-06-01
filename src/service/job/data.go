@@ -27,11 +27,21 @@ func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 
 	switch msg.MsgType {
 	case types.MsgTypeTelnet:
-		choosetask := task.Parse(string(msg.Payload.([]byte)))
-		task.Route[choosetask](msg)
+		switch msg.Sender {
+		case "mongo":
+			msg.Receiver = "tcpserver"
+		case "tcpserver":
+			choosetask := task.Parse(string(msg.Payload.([]byte)))
+			task.Route[choosetask](msg)
+		}
+	case types.MsgTypeUnknown:
+		fallthrough
+	default:
+		logger.Warn("%s:not handle:get data msg from:%s,type:%d", t.Name, msg.Sender, msg.MsgType)
+		msg.Receiver = dm.NoReceiver
 	}
-
-	if msg.Payload != nil {
+	msg.Sender = t.Name
+	if msg.Receiver != dm.NoReceiver {
 		ok := t.Output.WritePipeNB(msg)
 		if !ok {
 			// channel full

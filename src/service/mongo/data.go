@@ -27,14 +27,19 @@ func (t *mongoType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 		//todo: do more
 		return Continue, service.FunOK
 	}
-	d := m.(ts.MongoDirty)
-	t.dirtyPool.addDirty(&d)
-	if msg.Payload != nil {
-		ok := t.output.WritePipeNB(msg)
-		if !ok {
-			// channel full
-			return Continue, service.FunDataPipeFull
-		}
+	d, ok := m.(ts.Dirty)
+	if !ok {
+		logger.Error("msg is not Dirty")
+		return Continue, service.FunUnknown
 	}
+	t.dirtyPool.addDirty(&d)
+	msg.Receiver = msg.Sender
+	msg.Sender = t.Name
+	ok = t.output.WritePipeNB(msg)
+	if !ok {
+		// channel full
+		return Continue, service.FunDataPipeFull
+	}
+
 	return Continue, service.FunOK
 }

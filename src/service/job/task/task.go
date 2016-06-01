@@ -50,7 +50,21 @@ func doLater(in *dm.DataMsg) {
 	in.Receiver = "timer"
 }
 
-func doMongoInsert(in *dm.DataMsg) {
-	in.SetMeta("mongo", ts.MongoDirty{Action: ts.MongoActionCreate})
+func doMongoCreate(in *dm.DataMsg) {
+	logger.Info("job:doMongoCreate")
+	r := record{}
+	//r.Dirty = ts.Dirty{Action: ts.MongoActionCreate}
+	in.SetMeta("mongo", &r)
+	//in.SetMeta("mongo", ts.MongoDirty{Action: ts.MongoActionCreate})
 	in.Receiver = "mongo"
 }
+
+type record struct {
+	//ts.Dirty
+}
+
+func (t *record) CRUD() bool {
+	logger.Info("I'm talking to mongo")
+	return true
+}
+func (t *record) Inspect() string { return "inspect" }
