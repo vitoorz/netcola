@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+//SysEnv will hold all the key-value parameters from the os environment
 var SysEnv *Config = nil
 
 func init() {

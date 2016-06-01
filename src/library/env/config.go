@@ -11,11 +11,15 @@ import (
 	"sync"
 )
 
+//data struct to hold a group of config parameters, with key type default as string and value store in string format
 type Config struct {
 	KV map[string]string
 	sync.RWMutex
 }
 
+//reg-expression to resolve key value in config file, see test.conf, example:
+//	key = value
+//line with # will be considered as comments and be ignored
 var kvRegexp *regexp.Regexp = regexp.MustCompile(`[\t ]*([0-9A-Za-z_]+)[\t ]*=[\t ]*([^\t\n\f\r# ]+)[\t #]*`)
 
 func NewConfig(path string) *Config {
@@ -29,6 +33,8 @@ func NewConfig(path string) *Config {
 	return c
 }
 
+//all value will be set and store in string formation, ValTYPE method will get the value with TYPE formation
+//value of boolean type can be set as 0, 1 or false, true
 func (c *Config) Set(key string, val interface{}) {
 	value := ""
 	b, ok := val.(bool)
@@ -98,6 +104,7 @@ func (c *Config) ValFloat64(key string) (float64, error) {
 	return value, err
 }
 
+//read all the config key-value pair from config file defined by path
 func (c *Config) LoadFromFile(path string) error {
 	c.Lock()
 	c.KV = make(map[string]string)

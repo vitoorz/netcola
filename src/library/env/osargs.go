@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+//CmdArgs will hold all the key-value parameters that were given in command line
 var CmdArgs *Config = nil
 
 func init() {
