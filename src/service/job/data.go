@@ -9,7 +9,6 @@ import (
 	"library/logger"
 	"service"
 	"service/job/task"
-	//ts "types/service"
 	"types"
 )
 
@@ -42,11 +41,7 @@ func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	}
 	msg.Sender = t.Name
 	if msg.Receiver != dm.NoReceiver {
-		ok := t.Output.WritePipeNB(msg)
-		if !ok {
-			// channel full
-			return Continue, service.FunDataPipeFull
-		}
+		t.Output.WritePipeNB(msg)
 	}
 	return Continue, service.FunOK
 }

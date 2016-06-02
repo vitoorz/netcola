@@ -1,10 +1,11 @@
 package mongo
 
 import (
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
+	"time"
 )
 
 const ServiceName = "mongo"
@@ -17,23 +18,20 @@ const (
 
 type mongoType struct {
 	service.Service
-	output *dm.DataMsgPipe
-
+	output    *dm.DataMsgPipe
 	ip        string
 	port      string
-	db        string
 	session   *mgo.Session
 	dirtyPool *DirtyPool
 }
 
-func NewMongo(name, ip, port, db string) *mongoType {
+func NewMongo(name, ip, port string) *mongoType {
 	t := &mongoType{}
 	t.Service = *service.NewService(ServiceName)
 	t.Name = name
 	t.output = nil
 	t.ip = ip
 	t.port = port
-	t.db = db
 	t.session = nil
 	t.dirtyPool = NewDirtyPool()
 	return t
@@ -42,9 +40,9 @@ func NewMongo(name, ip, port, db string) *mongoType {
 func (t *mongoType) mongo() {
 	logger.Info("%s:service running", t.Name)
 	var next, fun int = Continue, service.FunUnknown
-	//todo , dial first?
 
-	go t.dirtyPool.recycleDaemon()
+	// todo: how to control this daemon?
+	go t.recycleDaemon()
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -77,4 +75,24 @@ func (t *mongoType) mongo() {
 	}
 	return
 
+}
+
+func (t *mongoType) recycleDaemon() {
+	for {
+		todo, hasDirty := t.dirtyPool.reborn()
+		if !hasDirty {
+			time.Sleep(time.Millisecond)
+			continue
+		}
+		var ok bool = false
+		for _, dirty := range todo {
+			for ok = (*dirty).CRUD(t.session); !ok; {
+				logger.Info("CRUD failed:%s", (*dirty).Inspect())
+				ok = (*dirty).CRUD(t.session)
+			}
+			if !ok {
+				logger.Error("CRUD operation failed")
+			}
+		}
+	}
 }

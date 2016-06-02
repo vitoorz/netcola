@@ -54,7 +54,7 @@ func main() {
 	timersrv := timer.NewTimer("timer")
 	service.StartService(timersrv, enginesrv.BUS)
 
-	mongosrv := mongo.NewMongo("mongo", "127.0.0.1", "27017", "test")
+	mongosrv := mongo.NewMongo("mongo", "127.0.0.1", "27017")
 	service.StartService(mongosrv, enginesrv.BUS)
 
 	tcpsrv := privatetcp.NewPrivateTCPServer("tcpserver", "0.0.0.0", "7171")

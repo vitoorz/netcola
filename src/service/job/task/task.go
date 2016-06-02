@@ -2,12 +2,17 @@ package task
 
 import (
 	"fmt"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"os/exec"
+	"time"
+)
+
+import (
 	dm "library/core/datamsg"
 	"library/env"
 	"library/logger"
-	"os/exec"
 	"service"
-	"time"
 	ts "types/service"
 )
 
@@ -56,9 +61,7 @@ func doLater(in *dm.DataMsg) {
 func doMongoCreate(in *dm.DataMsg) {
 	logger.Info("job:doMongoCreate")
 	r := record{}
-	//r.Dirty = ts.Dirty{Action: ts.MongoActionCreate}
 	in.SetMeta("mongo", &r)
-	//in.SetMeta("mongo", ts.MongoDirty{Action: ts.MongoActionCreate})
 	in.Receiver = "mongo"
 }
 
@@ -80,12 +83,23 @@ func doService(in *dm.DataMsg) {
 	in.Payload = []byte(list)
 }
 
-type record struct {
-	//ts.Dirty
-}
+type record struct{}
 
-func (t *record) CRUD() bool {
+func (t *record) CRUD(sess *mgo.Session) bool {
 	logger.Info("I'm talking to mongo")
+	mytestdb := "mytestdb"
+	col := "col"
+
+	scopy := sess.Copy()
+	defer scopy.Close()
+
+	c := scopy.DB(mytestdb).C(col)
+	err := c.Insert(bson.M{"hello": time.Now().String()})
+	if err != nil {
+		logger.Error("error write to mongo")
+		return false
+	}
+
 	return true
 }
 func (t *record) Inspect() string { return "inspect" }

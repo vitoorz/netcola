@@ -1,5 +1,9 @@
 package service
 
+import (
+	"gopkg.in/mgo.v2"
+)
+
 type MongoCRUD int
 
 const (
@@ -16,7 +20,6 @@ const (
 //}
 
 type Dirty interface {
-	CRUD() bool
-    Inspect() string
-
+	CRUD(*mgo.Session) bool
+	Inspect() string
 }

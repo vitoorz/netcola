@@ -35,11 +35,6 @@ func (t *mongoType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	t.dirtyPool.addDirty(&d)
 	msg.Receiver = msg.Sender
 	msg.Sender = t.Name
-	ok = t.output.WritePipeNB(msg)
-	if !ok {
-		// channel full
-		return Continue, service.FunDataPipeFull
-	}
-
+	t.output.WritePipeNB(msg)
 	return Continue, service.FunOK
 }

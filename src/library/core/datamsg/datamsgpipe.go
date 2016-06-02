@@ -27,7 +27,7 @@ func (t *DataMsgPipe) WritePipeNB(msg *DataMsg) bool {
 	case t.Pipe <- msg:
 		break
 	default:
-		logger.Warn("down chan full")
+		logger.Warn("Data chan full, so fork a routine wait here")
 		go func() {
 			t.Pipe <- msg
 		}()
