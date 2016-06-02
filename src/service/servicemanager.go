@@ -39,7 +39,14 @@ func (t *ServiceManager) Service(name string) (IService, bool) {
 	return nil, ok
 }
 
-func (t *ServiceManager) Register(service IService) error {
+func (t *ServiceManager) NameList() (list []string) {
+	for name := range t.services {
+		list = append(list, name)
+	}
+	return list
+}
+
+func (t *ServiceManager) register(service IService) error {
 	s := service.Self()
 	sList, ok := t.services[s.Name]
 	if !ok {
@@ -53,7 +60,7 @@ func (t *ServiceManager) Register(service IService) error {
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
 	if s.Start(bus) {
-		ServicePool.Register(s)
+		ServicePool.register(s)
 		return true
 	} else {
 		return false

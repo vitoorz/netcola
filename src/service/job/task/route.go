@@ -12,6 +12,8 @@ const (
 	taskHelp
 	taskLater
 	taskMongoCreate
+	taskEnv
+	taskServiceList
 )
 
 func doNothing(in *dm.DataMsg) {
@@ -26,4 +28,6 @@ var Route = map[int](func(*dm.DataMsg)){
 	taskHelp:        doHelp,
 	taskLater:       doLater,
 	taskMongoCreate: doMongoCreate,
+	taskEnv:         doSysEnv,
+	taskServiceList: doService,
 }

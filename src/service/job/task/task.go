@@ -1,9 +1,12 @@
 package task
 
 import (
+	"fmt"
 	dm "library/core/datamsg"
+	"library/env"
 	"library/logger"
 	"os/exec"
+	"service"
 	"time"
 	ts "types/service"
 )
@@ -57,6 +60,24 @@ func doMongoCreate(in *dm.DataMsg) {
 	in.SetMeta("mongo", &r)
 	//in.SetMeta("mongo", ts.MongoDirty{Action: ts.MongoActionCreate})
 	in.Receiver = "mongo"
+}
+
+func doSysEnv(in *dm.DataMsg) {
+	envVal := "System environment variables:\n"
+	for key, value := range env.SysEnv.KV {
+		envVal = fmt.Sprintf("%s %s = %s\n", envVal, key, value)
+	}
+	in.Receiver = "tcpserver"
+	in.Payload = []byte(envVal)
+}
+
+func doService(in *dm.DataMsg) {
+	list := "Service list in App:\n"
+	for _, name := range service.ServicePool.NameList() {
+		list = fmt.Sprintf("%s %s\n", list, name)
+	}
+	in.Receiver = "tcpserver"
+	in.Payload = []byte(list)
 }
 
 type record struct {

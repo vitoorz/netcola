@@ -21,5 +21,11 @@ func Parse(in string) int {
 	if strings.Contains(in, "mongow") {
 		return taskMongoCreate
 	}
+	if strings.Contains(in, "env") {
+		return taskEnv
+	}
+	if strings.Contains(in, "service") {
+		return taskServiceList
+	}
 	return taskUnknown
 }
