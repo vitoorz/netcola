@@ -60,7 +60,7 @@ func doLater(in *dm.DataMsg) {
 
 func doMongoCreate(in *dm.DataMsg) {
 	logger.Info("job:doMongoCreate")
-	r := record{}
+	r := Record{}
 	in.SetMeta("mongo", &r)
 	in.Receiver = "mongo"
 }
@@ -83,14 +83,16 @@ func doService(in *dm.DataMsg) {
 	in.Payload = []byte(list)
 }
 
-type record struct{}
+type Record struct {
+}
 
-func (t *record) CRUD(sess *mgo.Session) bool {
+func (t *Record) CRUD(in interface{}) bool {
 	logger.Info("I'm talking to mongo")
 	mytestdb := "mytestdb"
 	col := "col"
 
-	scopy := sess.Copy()
+	s := in.(*mgo.Session)
+	scopy := s.Copy()
 	defer scopy.Close()
 
 	c := scopy.DB(mytestdb).C(col)
@@ -102,4 +104,4 @@ func (t *record) CRUD(sess *mgo.Session) bool {
 
 	return true
 }
-func (t *record) Inspect() string { return "inspect" }
+func (t *Record) Inspect() string { return "inspect" }

@@ -18,11 +18,11 @@ const (
 
 type mongoType struct {
 	service.Service
-	output    *dm.DataMsgPipe
-	ip        string
-	port      string
-	session   *mgo.Session
-	dirtyPool *DirtyPool
+	output  *dm.DataMsgPipe
+	ip      string
+	port    string
+	session *mgo.Session
+	buffer  *service.BufferPool
 }
 
 func NewMongo(name, ip, port string) *mongoType {
@@ -33,7 +33,7 @@ func NewMongo(name, ip, port string) *mongoType {
 	t.ip = ip
 	t.port = port
 	t.session = nil
-	t.dirtyPool = NewDirtyPool()
+	t.buffer = service.NewBufferPool()
 	return t
 }
 
@@ -79,16 +79,17 @@ func (t *mongoType) mongo() {
 
 func (t *mongoType) recycleDaemon() {
 	for {
-		todo, hasDirty := t.dirtyPool.reborn()
-		if !hasDirty {
+		todo, hasPage := t.buffer.Reborn()
+		if !hasPage {
 			time.Sleep(time.Millisecond)
 			continue
 		}
 		var ok bool = false
-		for _, dirty := range todo {
-			for ok = (*dirty).CRUD(t.session); !ok; {
-				logger.Info("CRUD failed:%s", (*dirty).Inspect())
-				ok = (*dirty).CRUD(t.session)
+		for _, p := range todo {
+
+			for ok = (*p).CRUD(t.session); !ok; {
+				logger.Info("CRUD failed:%s", (*p).Inspect())
+				ok = (*p).CRUD(t.session)
 			}
 			if !ok {
 				logger.Error("CRUD operation failed")

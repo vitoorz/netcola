@@ -8,7 +8,6 @@ import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
-	ts "types/service"
 )
 
 func (t *mongoType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
@@ -27,12 +26,12 @@ func (t *mongoType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 		//todo: do more
 		return Continue, service.FunOK
 	}
-	d, ok := m.(ts.Dirty)
+	d, ok := m.(service.Page)
 	if !ok {
-		logger.Error("msg is not Dirty")
+		logger.Error("msg is not Page")
 		return Continue, service.FunUnknown
 	}
-	t.dirtyPool.addDirty(&d)
+	t.buffer.Append(&d)
 	msg.Receiver = msg.Sender
 	msg.Sender = t.Name
 	t.output.WritePipeNB(msg)
