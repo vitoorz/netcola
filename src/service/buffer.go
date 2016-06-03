@@ -56,7 +56,7 @@ func (t *BufferPool) Daemon() {
 	for {
 		todo, hasPage := t.Reborn()
 		if !hasPage {
-			time.Sleep(time.Millisecond)
+			time.Sleep(time.Millisecond * 20)
 			continue
 		}
 		for _, msg := range todo {
@@ -66,7 +66,4 @@ func (t *BufferPool) Daemon() {
 			}
 		}
 	}
-}
-
-type BufferHandler interface {
 }
