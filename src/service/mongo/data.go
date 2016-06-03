@@ -21,17 +21,8 @@ func (t *mongoType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	}()
 
 	logger.Info("%s:get data msg:%d,payload:%v", t.Name, msg.MsgType, msg.Payload.([]byte))
-	m, ok := msg.Meta(t.Name)
-	if !ok {
-		//todo: do more
-		return Continue, service.FunOK
-	}
-	d, ok := m.(service.Page)
-	if !ok {
-		logger.Error("msg is not Page")
-		return Continue, service.FunUnknown
-	}
-	t.buffer.Append(&d)
+
+	t.buffer.Append(msg)
 	msg.Receiver = msg.Sender
 	msg.Sender = t.Name
 	t.output.WritePipeNB(msg)

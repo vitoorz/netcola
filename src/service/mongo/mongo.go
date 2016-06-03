@@ -5,7 +5,6 @@ import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
-	"time"
 )
 
 const ServiceName = "mongo"
@@ -33,7 +32,7 @@ func NewMongo(name, ip, port string) *mongoType {
 	t.ip = ip
 	t.port = port
 	t.session = nil
-	t.buffer = service.NewBufferPool()
+	t.buffer = service.NewBufferPool(t)
 	return t
 }
 
@@ -42,7 +41,7 @@ func (t *mongoType) mongo() {
 	var next, fun int = Continue, service.FunUnknown
 
 	// todo: how to control this daemon?
-	go t.recycleDaemon()
+	//go t.buffer.Daemon()
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -77,23 +76,22 @@ func (t *mongoType) mongo() {
 
 }
 
-func (t *mongoType) recycleDaemon() {
-	for {
-		todo, hasPage := t.buffer.Reborn()
-		if !hasPage {
-			time.Sleep(time.Millisecond)
-			continue
-		}
-		var ok bool = false
-		for _, p := range todo {
-
-			for ok = (*p).CRUD(t.session); !ok; {
-				logger.Info("CRUD failed:%s", (*p).Inspect())
-				ok = (*p).CRUD(t.session)
-			}
-			if !ok {
-				logger.Error("CRUD operation failed")
-			}
-		}
+func (t *mongoType) Handle(msg *dm.DataMsg) bool {
+	logger.Info("this is handle:%+v", msg)
+	i, ok := msg.Meta(t.Name)
+	if !ok {
+		logger.Error("get Dirty interface error")
+		return false
 	}
+
+	d, ok := i.(Dirty)
+	if !ok {
+		logger.Error("msg is not Dirty interface")
+		return false
+	}
+	for ok = d.CRUD(t.session); !ok; {
+		logger.Info("CRUD failed:%s", d.Inspect())
+		ok = d.CRUD(t.session)
+	}
+	return true
 }

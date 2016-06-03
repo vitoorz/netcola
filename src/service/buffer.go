@@ -4,19 +4,26 @@ import (
 	"sync"
 )
 
-type Page interface {
-	CRUD(interface{}) bool
-	Inspect() string
-}
+import (
+	cm "library/core/controlmsg"
+	dm "library/core/datamsg"
+	"library/logger"
+	"time"
+)
 
 type BufferPool struct {
 	Lock sync.Mutex
-	Pool []*Page
+	Host IService
+	cm.ControlMsgPipe
+	Pool []*dm.DataMsg
 }
 
-func NewBufferPool() *BufferPool {
+func NewBufferPool(h IService) *BufferPool {
 	t := &BufferPool{}
-	t.Pool = make([]*Page, 0)
+	t.Host = h
+	t.Pool = make([]*dm.DataMsg, 0)
+	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	go t.Daemon()
 	return t
 }
 
@@ -26,13 +33,13 @@ func (t *BufferPool) Len() int {
 	return len(t.Pool)
 }
 
-func (t *BufferPool) Reborn() ([]*Page, bool) {
+func (t *BufferPool) Reborn() ([]*dm.DataMsg, bool) {
 	if t.Len() <= 0 {
 		return nil, false
 	}
 
 	pool := t.Pool
-	newPool := make([]*Page, 0)
+	newPool := make([]*dm.DataMsg, 0)
 
 	t.Lock.Lock()
 	defer t.Lock.Unlock()
@@ -40,8 +47,38 @@ func (t *BufferPool) Reborn() ([]*Page, bool) {
 	return pool, true
 }
 
-func (t *BufferPool) Append(page *Page) {
+func (t *BufferPool) Append(msg *dm.DataMsg) {
 	t.Lock.Lock()
 	defer t.Lock.Unlock()
-	t.Pool = append(t.Pool, page)
+	t.Pool = append(t.Pool, msg)
+}
+
+func (t *BufferPool) Daemon() {
+	//var ok bool = false
+	//var d Dirty
+	//var i interface{}
+	serviceName := t.Host.Self().Name
+	h, ok := t.Host.(BufferHandler)
+	if !ok {
+		logger.Error("%s:msg is not BufferHandler interface", serviceName)
+		return
+	}
+
+	for {
+		todo, hasPage := t.Reborn()
+		if !hasPage {
+			time.Sleep(time.Millisecond)
+			continue
+		}
+		for _, msg := range todo {
+			h.Handle(msg)
+			if !ok {
+				logger.Error("%s:Operation failed", serviceName)
+			}
+		}
+	}
+}
+
+type BufferHandler interface {
+	Handle(*dm.DataMsg) bool
 }
