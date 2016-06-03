@@ -54,7 +54,7 @@ func (t *watcherType) watch() {
 				logger.Info("Cmd Read error")
 				break
 			}
-			next, fun = t.controlEntry(msg)
+			next, fun = t.ControlHandler(msg)
 			if fun != service.FunOK {
 				logger.Info("watcher control chan full")
 			}

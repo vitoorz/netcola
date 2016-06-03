@@ -15,7 +15,6 @@ const (
 
 func (t *watcherType) Start(bus *dm.DataMsgPipe) bool {
 	logger.Info("watcher start running")
-	go t.watch()
 	return true
 }
 
@@ -31,7 +30,7 @@ func (t *watcherType) Exit() bool {
 	return true
 }
 
-func (t *watcherType) controlEntry(msg *cm.ControlMsg) (int, int) {
+func (t *watcherType) ControlHandler(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("ControlMsgPipe.Cmd Read %d", msg.MsgType)

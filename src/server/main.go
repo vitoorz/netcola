@@ -46,7 +46,7 @@ func main() {
 	stopAndCleanMemory()
 
 	enginesrv := engine.NewEngine("engine")
-	service.StartService(enginesrv, nil)
+	enginesrv.Start(nil)
 
 	jobsrv := job.NewJob("job")
 	service.StartService(jobsrv, enginesrv.BUS)

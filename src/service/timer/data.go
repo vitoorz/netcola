@@ -3,38 +3,22 @@ package timer
 import (
 	dm "library/core/datamsg"
 	"library/logger"
-	"service"
 	"service/timer/task"
 	"time"
 	ts "types/service"
 )
-
-func (t *timerType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
-	defer func() {
-		if x := recover(); x != nil {
-			logger.Error("timer panic: %v", x)
-			logger.Stack()
-		}
-		operate = Continue
-		funCode = service.FunPanic
-	}()
-
-	logger.Info("timer: data msg:%+v,payload:%s", msg, msg.Payload.([]byte))
-	t.Buffer.Append(msg)
-	return Continue, service.FunOK
-}
 
 func (t *timerType) callBack(e ts.Event, msg *dm.DataMsg) {
 	go func() {
 		wakeAt := <-e.TimerObject.C
 		logger.Info("event wake up:at:%s", wakeAt.String())
 		task.DoLater(msg)
-		msg.Sender = t.Name
+		msg.Receiver, msg.Sender = msg.Sender, msg.Receiver
 		t.output.WritePipeNB(msg)
 	}()
 }
 
-func (t *timerType) Handle(msg *dm.DataMsg) bool {
+func (t *timerType) DataHandler(msg *dm.DataMsg) bool {
 	m, ok := msg.Meta(t.Name)
 	if !ok {
 		logger.Error("meta error for timer")

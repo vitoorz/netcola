@@ -4,6 +4,7 @@ import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
+	"service"
 )
 
 func (t *engineType) Start(bus *dm.DataMsgPipe) bool {
@@ -42,13 +43,13 @@ func (t *engineType) Exit() bool {
 	return true
 }
 
-func (t *engineType) controlEntry(msg *cm.ControlMsg) (int, bool) {
+func (t *engineType) ControlHandler(msg *cm.ControlMsg) (int, int) {
 	switch msg.MsgType {
 	case cm.ControlMsgExit:
 		logger.Info("%s:ControlMsgPipe.Cmd Read %d", t.Name, msg.MsgType)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 		logger.Info("%s:exit", t.Name)
-		return Return, true
+		return Return, service.FunOK
 	case cm.ControlMsgPause:
 		logger.Info("%s:paused", t.Name)
 		t.Echo <- &cm.ControlMsg{MsgType: cm.ControlMsgPause}
@@ -73,5 +74,5 @@ func (t *engineType) controlEntry(msg *cm.ControlMsg) (int, bool) {
 		}
 		logger.Info("%s:resumed", t.Name)
 	}
-	return Continue, true
+	return Continue, service.FunOK
 }

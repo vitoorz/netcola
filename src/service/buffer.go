@@ -13,17 +13,16 @@ import (
 
 type BufferPool struct {
 	Lock sync.Mutex
-	Host IService
+	Host *Service
 	cm.ControlMsgPipe
 	Pool []*dm.DataMsg
 }
 
-func NewBufferPool(h IService) *BufferPool {
+func NewBufferPool(h *Service) *BufferPool {
 	t := &BufferPool{}
 	t.Host = h
 	t.Pool = make([]*dm.DataMsg, 0)
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
-	go t.Daemon()
 	return t
 }
 
@@ -54,13 +53,6 @@ func (t *BufferPool) Append(msg *dm.DataMsg) {
 }
 
 func (t *BufferPool) Daemon() {
-	serviceName := t.Host.Self().Name
-	h, ok := t.Host.(BufferHandler)
-	if !ok {
-		logger.Error("%s:msg is not BufferHandler interface", serviceName)
-		return
-	}
-
 	for {
 		todo, hasPage := t.Reborn()
 		if !hasPage {
@@ -68,14 +60,13 @@ func (t *BufferPool) Daemon() {
 			continue
 		}
 		for _, msg := range todo {
-			h.Handle(msg)
+			ok := t.Host.Instance.DataHandler(msg)
 			if !ok {
-				logger.Error("%s:Operation failed", serviceName)
+				logger.Error("%s:DataHandler failed", t.Host.Name)
 			}
 		}
 	}
 }
 
 type BufferHandler interface {
-	Handle(*dm.DataMsg) bool
 }

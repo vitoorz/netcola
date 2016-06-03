@@ -6,11 +6,11 @@ import (
 )
 
 import (
+	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
 	"time"
-
 	"types"
 )
 
@@ -32,6 +32,8 @@ func NewPrivateTCPServer(name, ip, port string) *privateTCPServer {
 	t.Name = name
 	t.ip = ip
 	t.port = port
+	t.Buffer = service.NewBufferPool(&t.Service)
+	t.Instance = t
 	return t
 }
 
@@ -68,7 +70,7 @@ func (t *privateTCPServer) Exit() bool {
 }
 
 func (t *privateTCPServer) serve() {
-	go t.writeConn()
+
 	for {
 		connect, err := t.listener.AcceptTCP()
 		if err != nil {
@@ -106,31 +108,25 @@ func (t *privateTCPServer) readConn(connection *net.TCPConn) {
 	}
 }
 
-func (t *privateTCPServer) writeConn() {
+func (t *privateTCPServer) ControlHandler(msg *cm.ControlMsg) (int, int) {
+	return 0, 0
+}
 
-	for {
-		select {
-		case data, ok := <-t.ReadPipe():
-			if !ok {
-				logger.Info("%s:Data Read error", t.Name)
-				break
-			}
-			logger.Debug("%s:get msg from chan:%+v", t.Name, data)
-			meta, ok := data.Meta(t.Name)
-			if !ok {
-				logger.Error("%s:wrong meta in datamsg:%+v", t.Name, data)
-				break
-			}
-			connection := meta.(*net.TCPConn)
-			//todo: need to verify if the data payload is []byte
-			count, err := connection.Write(data.Payload.([]byte))
-			if err != nil {
-				logger.Warn("%s:conn write err:%s", t.Name, err.Error())
-				connection.Close()
-				return
-			} else {
-				logger.Info("%s:sent to network:%d byte", t.Name, count)
-			}
-		}
+func (t *privateTCPServer) DataHandler(msg *dm.DataMsg) bool {
+	meta, ok := msg.Meta(t.Name)
+	if !ok {
+		logger.Error("%s:wrong meta in datamsg:%+v", t.Name, msg)
+		return false
 	}
+	connection := meta.(*net.TCPConn)
+	//todo: need to verify if the data payload is []byte
+	count, err := connection.Write(msg.Payload.([]byte))
+	if err != nil {
+		logger.Warn("%s:conn write err:%s", t.Name, err.Error())
+		connection.Close()
+		return false
+	} else {
+		logger.Info("%s:sent to network:%d byte", t.Name, count)
+	}
+	return true
 }

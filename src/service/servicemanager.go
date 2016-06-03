@@ -3,6 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+)
+
+import (
 	dm "library/core/datamsg"
 	. "library/idgen"
 )
@@ -60,6 +63,8 @@ func (t *ServiceManager) register(service IService) error {
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
 	if s.Start(bus) {
+		go s.Self().Buffer.Daemon()
+		go s.Self().Background()
 		ServicePool.register(s)
 		return true
 	} else {

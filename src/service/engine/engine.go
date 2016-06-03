@@ -24,6 +24,8 @@ func NewEngine(name string) *engineType {
 	t.Service = *service.NewService(ServiceName)
 	t.BUS = dm.NewDataMsgPipe(0)
 	t.Name = name
+	t.Buffer = service.NewBufferPool(&t.Service)
+	t.Instance = t
 	return t
 }
 
@@ -38,14 +40,14 @@ func (t *engineType) engine() {
 				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
-			next, ok = t.controlEntry(msg)
+			next, fun = t.ControlHandler(msg)
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
-			next, fun = t.dataEntry(msg)
+			next, fun = t.BackDoorEntry(msg)
 			break
 		case msg, ok := <-t.BUS.ReadPipe():
 			if !ok {
