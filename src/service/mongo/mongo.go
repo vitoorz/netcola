@@ -38,9 +38,6 @@ func NewMongo(name, ip, port string) *mongoType {
 func (t *mongoType) mongo() {
 	logger.Info("%s:service running", t.Name)
 	var next, fun int = Continue, service.FunUnknown
-
-	// todo: how to control this daemon?
-	//go t.buffer.Daemon()
 	for {
 		select {
 		case msg, ok := <-t.Cmd:

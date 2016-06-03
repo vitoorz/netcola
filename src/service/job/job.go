@@ -24,6 +24,7 @@ func NewJob(name string) *jobType {
 	t.Service = *service.NewService(ServiceName)
 	t.Output = nil
 	t.Name = name
+	t.Buffer = service.NewBufferPool(t)
 	return t
 }
 

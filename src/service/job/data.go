@@ -23,7 +23,12 @@ func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	}()
 
 	logger.Info("%s:get data msg:%d,payload:%v", t.Name, msg.MsgType, msg.Payload.([]byte))
+	t.Buffer.Append(msg)
+	return Continue, service.FunOK
+}
 
+func (t *jobType) Handle(msg *dm.DataMsg) bool {
+	logger.Info("this is handle:%+v", msg)
 	switch msg.MsgType {
 	case types.MsgTypeTelnet:
 		switch msg.Sender {
@@ -43,5 +48,5 @@ func (t *jobType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	if msg.Receiver != dm.NoReceiver {
 		t.Output.WritePipeNB(msg)
 	}
-	return Continue, service.FunOK
+	return true
 }

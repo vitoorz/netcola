@@ -54,9 +54,6 @@ func (t *BufferPool) Append(msg *dm.DataMsg) {
 }
 
 func (t *BufferPool) Daemon() {
-	//var ok bool = false
-	//var d Dirty
-	//var i interface{}
 	serviceName := t.Host.Self().Name
 	h, ok := t.Host.(BufferHandler)
 	if !ok {

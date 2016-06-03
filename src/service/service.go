@@ -27,7 +27,7 @@ func NewService(name string) *Service {
 	t.State = StateInit
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
 	t.DataMsgPipe = *dm.NewDataMsgPipe(0)
-	t.Buffer = nil //NewBufferPool(t)
+	t.Buffer = nil
 	return t
 }
 
