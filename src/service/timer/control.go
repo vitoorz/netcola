@@ -9,7 +9,7 @@ import (
 
 func (t *timerType) Start(bus *dm.DataMsgPipe) bool {
 	logger.Info("%s:start running", t.Name)
-	t.Output = bus
+	t.output = bus
 	go t.timer()
 	return true
 }

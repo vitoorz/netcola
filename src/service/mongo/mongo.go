@@ -21,7 +21,6 @@ type mongoType struct {
 	ip      string
 	port    string
 	session *mgo.Session
-	buffer  *service.BufferPool
 }
 
 func NewMongo(name, ip, port string) *mongoType {
@@ -32,7 +31,7 @@ func NewMongo(name, ip, port string) *mongoType {
 	t.ip = ip
 	t.port = port
 	t.session = nil
-	t.buffer = service.NewBufferPool(t)
+	t.Buffer = service.NewBufferPool(t)
 	return t
 }
 
@@ -74,24 +73,4 @@ func (t *mongoType) mongo() {
 	}
 	return
 
-}
-
-func (t *mongoType) Handle(msg *dm.DataMsg) bool {
-	logger.Info("this is handle:%+v", msg)
-	i, ok := msg.Meta(t.Name)
-	if !ok {
-		logger.Error("get Dirty interface error")
-		return false
-	}
-
-	d, ok := i.(Dirty)
-	if !ok {
-		logger.Error("msg is not Dirty interface")
-		return false
-	}
-	for ok = d.CRUD(t.session); !ok; {
-		logger.Info("CRUD failed:%s", d.Inspect())
-		ok = d.CRUD(t.session)
-	}
-	return true
 }

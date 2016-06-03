@@ -17,16 +17,17 @@ const (
 
 type timerType struct {
 	service.Service
-	Output    *dm.DataMsgPipe
+	output    *dm.DataMsgPipe
 	timerPool map[idgen.ObjectID]*dm.DataMsg
 }
 
 func NewTimer(name string) *timerType {
 	t := &timerType{}
 	t.Service = *service.NewService(ServiceName)
-	t.Output = nil
+	t.output = nil
 	t.Name = name
 	t.timerPool = make(map[idgen.ObjectID]*dm.DataMsg)
+	t.Buffer = service.NewBufferPool(t)
 	return t
 }
 

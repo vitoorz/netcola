@@ -20,7 +20,21 @@ func (t *timerType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 	}()
 
 	logger.Info("timer: data msg:%+v,payload:%s", msg, msg.Payload.([]byte))
+	t.Buffer.Append(msg)
+	return Continue, service.FunOK
+}
 
+func (t *timerType) callBack(e ts.Event, msg *dm.DataMsg) {
+	go func() {
+		wakeAt := <-e.TimerObject.C
+		logger.Info("event wake up:at:%s", wakeAt.String())
+		task.DoLater(msg)
+		msg.Sender = t.Name
+		t.output.WritePipeNB(msg)
+	}()
+}
+
+func (t *timerType) Handle(msg *dm.DataMsg) bool {
 	m, ok := msg.Meta(t.Name)
 	if !ok {
 		logger.Error("meta error for timer")
@@ -33,16 +47,5 @@ func (t *timerType) dataEntry(msg *dm.DataMsg) (operate int, funCode int) {
 			t.callBack(ev, msg)
 		}
 	}
-
-	return Continue, service.FunOK
-}
-
-func (t *timerType) callBack(e ts.Event, msg *dm.DataMsg) {
-	go func() {
-		wakeAt := <-e.TimerObject.C
-		logger.Info("event wake up:at:%s", wakeAt.String())
-		task.DoLater(msg)
-		msg.Sender = t.Name
-		t.Output.WritePipeNB(msg)
-	}()
+	return true
 }
