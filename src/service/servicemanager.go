@@ -73,8 +73,12 @@ func (t *ServiceManager) register(service IService) error {
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
 	if s.Start(bus) {
-		go s.Self().Buffer.Daemon()
-		go s.Self().Background()
+		instance := s.Self()
+		if instance.Buffer != nil {
+			go instance.Buffer.Daemon()
+		}
+		go instance.Background()
+
 		ServicePool.register(s)
 		return true
 	} else {

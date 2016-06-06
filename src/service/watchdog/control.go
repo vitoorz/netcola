@@ -4,9 +4,6 @@ import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"time"
 )
 
@@ -55,11 +52,7 @@ func (t *watcherType) onTick() {
 		past := curTime - startTime
 		logger.Warn("watched object %s for %d seconds", obj, past)
 		if past >= 2 {
-			profile := pprof.Lookup("goroutine")
-
-			logger.Warn("%d goroutine(s) are currently in proccess, detail...", runtime.NumGoroutine())
-			profile.WriteTo(os.Stdout, 3)
-			logger.Warn("-----------over----------")
+			logger.PProf()
 			delete(t.objects, obj)
 		}
 	}

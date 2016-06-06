@@ -83,6 +83,11 @@ func doService(in *dm.DataMsg) {
 	in.Payload = []byte(list)
 }
 
+func doPProf(in *dm.DataMsg) {
+	in.Receiver = "tcpserver"
+	in.Payload = []byte(logger.PProf())
+}
+
 type Record struct {
 }
 

@@ -26,7 +26,6 @@ func NewTicker(name string) *tickerType {
 	t.output = nil
 	t.Name = name
 	t.tickerBooker = make(map[idgen.ObjectID]*ticker)
-	t.Buffer = service.NewBufferPool(&t.Service)
 	t.Instance = t
 	return t
 }

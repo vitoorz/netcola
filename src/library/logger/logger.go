@@ -1,9 +1,12 @@
 package logger
 
 import (
+	"bytes"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
+	"runtime/pprof"
 )
 
 const (
@@ -61,4 +64,15 @@ func Stack() {
 
 func EnableDebugLog(s bool) {
 	debugSwitch = s
+}
+
+func PProf() string {
+	profile := pprof.Lookup("goroutine")
+	msg := fmt.Sprintf("%d goroutine(s) are currently in proccess, detail...", runtime.NumGoroutine())
+	buffer := bytes.NewBuffer([]byte(msg))
+	profile.WriteTo(buffer, 3)
+	buffer.Write([]byte("-----------over----------"))
+
+	Warn(msg)
+	return buffer.String()
 }

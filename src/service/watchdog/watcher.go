@@ -18,7 +18,6 @@ func NewWatcher(name string) *watcherType {
 	t.Service = *service.NewService(ServiceName)
 	t.objects = make(map[string]int64, 0)
 	t.Name = name
-	t.Buffer = service.NewBufferPool(&t.Service)
 	t.Instance = t
 	return t
 }
