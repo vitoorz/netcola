@@ -1,18 +1,13 @@
 package engine
 
 import (
+	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
 	"service"
 )
 
 const ServiceName = "engine"
-
-const (
-	Break = iota
-	Continue
-	Return
-)
 
 type engineType struct {
 	service.Service
@@ -32,7 +27,7 @@ func NewEngine(name string) *engineType {
 func (t *engineType) engine() {
 	logger.Info("%s:service running", t.Name)
 
-	var next, fun int = Continue, service.FunUnknown
+	var next, fun int = cm.NextActionContinue, cm.ProcessStatUnknown
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -40,7 +35,7 @@ func (t *engineType) engine() {
 				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
-			next, fun = t.ControlHandler(msg)
+			next, fun = t.SysControlEntry(t.Name, msg)
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
@@ -56,18 +51,18 @@ func (t *engineType) engine() {
 			}
 			logger.Debug("%s:read bus chan msg:%+v", t.Name, msg)
 			next, fun = t.BusSchedule(msg)
-			if fun == service.FunDataPipeFull {
+			if fun == cm.ProcessPipeFull {
 				logger.Warn("%s:need do something when full", t.Name)
 			}
 			break
 		}
 
 		switch next {
-		case Break:
+		case cm.NextActionBreak:
 			break
-		case Return:
+		case cm.NextActionReturn:
 			return
-		case Continue:
+		case cm.NextActionContinue:
 		}
 	}
 	return

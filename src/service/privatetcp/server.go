@@ -109,7 +109,7 @@ func (t *privateTCPServer) readConn(connection *net.TCPConn) {
 }
 
 func (t *privateTCPServer) ControlHandler(msg *cm.ControlMsg) (int, int) {
-	return 0, 0
+	return cm.NextActionContinue, cm.ProcessStatOK
 }
 
 func (t *privateTCPServer) DataHandler(msg *dm.DataMsg) bool {

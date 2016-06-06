@@ -13,12 +13,6 @@ import (
 //should have no overlap with pre-defined control message type
 const ServiceName = "watcher"
 
-const (
-	Break = iota
-	Continue
-	Return
-)
-
 type watcherType struct {
 	service.Service
 	objects map[string]int64
@@ -43,7 +37,7 @@ func (t *watcherType) WatchObjOver(obj string) {
 func (t *watcherType) watch() {
 	logger.Info("%s:service running", t.Name)
 	tickChan := time.NewTicker(time.Second).C
-	var next, fun int = Continue, service.FunUnknown
+	var next, fun int = cm.NextActionContinue, cm.ProcessStatUnknown
 	for {
 		select {
 		case <-tickChan:
@@ -55,18 +49,18 @@ func (t *watcherType) watch() {
 				break
 			}
 			next, fun = t.ControlHandler(msg)
-			if fun != service.FunOK {
+			if fun != cm.ProcessStatOK {
 				logger.Info("watcher control chan full")
 			}
 			break
 		}
 
 		switch next {
-		case Break:
+		case cm.NextActionBreak:
 			break
-		case Return:
+		case cm.NextActionReturn:
 			return
-		case Continue:
+		case cm.NextActionContinue:
 		}
 	}
 	return

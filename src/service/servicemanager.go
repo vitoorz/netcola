@@ -8,6 +8,7 @@ import (
 import (
 	dm "library/core/datamsg"
 	. "library/idgen"
+	"library/logger"
 )
 
 //the only service manager instance in process, will maintain all service instance
@@ -68,6 +69,7 @@ func StartService(s IService, bus *dm.DataMsgPipe) bool {
 		ServicePool.register(s)
 		return true
 	} else {
+		logger.Error("start %s failed", s.Self().Name)
 		return false
 	}
 }

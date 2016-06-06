@@ -1,13 +1,12 @@
 package engine
 
 import (
+	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
-	"service"
 )
 
 func (t *engineType) BackDoorEntry(msg *dm.DataMsg) (operate int, funCode int) {
-	//service.ServicePool.SendDown(msg)
-	return Continue, service.FunOK
+	return cm.NextActionContinue, cm.ProcessStatOK
 }
 
 func (t *engineType) DataHandler(msg *dm.DataMsg) bool {

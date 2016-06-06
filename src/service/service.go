@@ -11,12 +11,6 @@ import (
 	"library/logger"
 )
 
-const (
-	Break = iota
-	Continue
-	Return
-)
-
 type Service struct {
 	sync.RWMutex
 	ID    idgen.ObjectID
@@ -44,8 +38,9 @@ func (t *Service) Self() *Service {
 }
 
 func (t *Service) Background() {
+	var next, stat int = cm.NextActionContinue, cm.ProcessStatOK
 	logger.Info("%s:service running", t.Name)
-	var next int = Continue
+
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -53,7 +48,10 @@ func (t *Service) Background() {
 				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
-			next, _ = t.Instance.ControlHandler(msg)
+			next, stat = t.SysControlEntry(t.Name, msg)
+			if stat == cm.ProcessStatIgnore {
+				next, _ = t.Instance.ControlHandler(msg)
+			}
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
@@ -65,11 +63,11 @@ func (t *Service) Background() {
 		}
 
 		switch next {
-		case Break:
+		case cm.NextActionBreak:
 			break
-		case Return:
+		case cm.NextActionReturn:
 			return
-		case Continue:
+		case cm.NextActionContinue:
 		}
 	}
 	return
