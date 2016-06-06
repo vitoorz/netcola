@@ -7,7 +7,6 @@ import (
 )
 
 func (t *engineType) Start(bus *dm.DataMsgPipe) bool {
-	logger.Info("%s:start running", t.Name)
 	go t.engine()
 	return true
 }

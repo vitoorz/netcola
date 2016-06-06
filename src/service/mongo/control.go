@@ -16,9 +16,7 @@ const (
 )
 
 func (t *mongoType) Start(bus *dm.DataMsgPipe) bool {
-	logger.Info("%s:start running", t.Name)
 	t.output = bus
-
 	return t.dial()
 }
 

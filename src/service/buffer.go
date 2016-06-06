@@ -42,8 +42,10 @@ func (t *BufferPool) reborn() ([]*dm.DataMsg, bool) {
 
 //provider
 func (t *BufferPool) Append(msg *dm.DataMsg) {
+	t.Cond.L.Lock()
 	t.Pool = append(t.Pool, msg)
 	t.Cond.Signal()
+	t.Cond.L.Unlock()
 }
 
 //should use lock to block for loop

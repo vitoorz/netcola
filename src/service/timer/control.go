@@ -3,11 +3,9 @@ package timer
 import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
-	"library/logger"
 )
 
 func (t *timerType) Start(bus *dm.DataMsgPipe) bool {
-	logger.Info("%s:start running", t.Name)
 	t.output = bus
 	return true
 }

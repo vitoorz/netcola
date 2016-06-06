@@ -3,11 +3,9 @@ package job
 import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
-	"library/logger"
 )
 
 func (t *jobType) Start(bus *dm.DataMsgPipe) bool {
-	logger.Info("%s:start running", t.Name)
 	t.Output = bus
 	return true
 }

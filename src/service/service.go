@@ -18,8 +18,9 @@ type Service struct {
 	State StateT
 	cm.ControlMsgPipe
 	dm.DataMsgPipe
-	Buffer   *BufferPool
-	Instance IService
+	Buffer    *BufferPool
+	SelfDrive bool
+	Instance  IService
 }
 
 func NewService(name string) *Service {
@@ -39,7 +40,7 @@ func (t *Service) Self() *Service {
 
 func (t *Service) Background() {
 	var next, stat int = cm.NextActionContinue, cm.ProcessStatOK
-	logger.Info("%s:service running", t.Name)
+	logger.Info("Sysbackgroud for service running: %s", t.Name)
 
 	for {
 		select {

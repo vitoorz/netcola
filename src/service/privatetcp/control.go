@@ -11,7 +11,6 @@ import (
 )
 
 func (t *privateTCPServer) Start(bus *dm.DataMsgPipe) bool {
-	logger.Info("%s:Start privateTCPServer", t.Name)
 	t.output = bus
 	tcpAddr, err := net.ResolveTCPAddr("tcp", t.ip+":"+t.port)
 	if err != nil {

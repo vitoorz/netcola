@@ -3,13 +3,11 @@ package ticker
 import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
-	"library/logger"
 	"service"
 	"time"
 )
 
 func (t *tickerType) Start(bus *dm.DataMsgPipe) bool {
-	logger.Info("%s:start running", t.Name)
 	t.output = bus
 	go t.tick()
 	return true
