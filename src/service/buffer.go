@@ -8,11 +8,10 @@ import (
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
 	"library/logger"
-	"time"
 )
 
 type BufferPool struct {
-	Lock sync.Mutex
+	Cond *sync.Cond //as a conditional variable
 	Host *Service
 	cm.ControlMsgPipe
 	Pool []*dm.DataMsg
@@ -23,42 +22,34 @@ func NewBufferPool(h *Service) *BufferPool {
 	t.Host = h
 	t.Pool = make([]*dm.DataMsg, 0)
 	t.ControlMsgPipe = *cm.NewControlMsgPipe()
+	t.Cond = sync.NewCond(&sync.Mutex{})
 	return t
 }
 
-func (t *BufferPool) Len() int {
-	t.Lock.Lock()
-	defer t.Lock.Unlock()
-	return len(t.Pool)
-}
-
-func (t *BufferPool) Reborn() ([]*dm.DataMsg, bool) {
-	if t.Len() <= 0 {
-		return nil, false
+//consumer
+func (t *BufferPool) reborn() ([]*dm.DataMsg, bool) {
+	t.Cond.L.Lock()
+	for len(t.Pool) <= 0 { //see usage of cond.wait(), this loop is needed
+		t.Cond.Wait()
 	}
-
 	pool := t.Pool
 	newPool := make([]*dm.DataMsg, 0)
-
-	t.Lock.Lock()
-	defer t.Lock.Unlock()
 	t.Pool = newPool
+	t.Cond.L.Unlock()
+
 	return pool, true
 }
 
+//provider
 func (t *BufferPool) Append(msg *dm.DataMsg) {
-	t.Lock.Lock()
-	defer t.Lock.Unlock()
 	t.Pool = append(t.Pool, msg)
+	t.Cond.Signal()
 }
 
+//should use lock to block for loop
 func (t *BufferPool) Daemon() {
 	for {
-		todo, hasPage := t.Reborn()
-		if !hasPage {
-			time.Sleep(time.Millisecond * 20)
-			continue
-		}
+		todo, _ := t.reborn()
 		for _, msg := range todo {
 			ok := t.Host.Instance.DataHandler(msg)
 			if !ok {

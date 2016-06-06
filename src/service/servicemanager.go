@@ -14,6 +14,7 @@ import (
 //the only service manager instance in process, will maintain all service instance
 var ServicePool = &ServiceManager{
 	services: make(map[string]*serviceSeries, 0),
+	byId:     make(map[ObjectID]IService, 0),
 }
 
 //Service with the same name, will have the same function
@@ -29,6 +30,7 @@ func newServiceSeries() *serviceSeries {
 
 type ServiceManager struct {
 	services map[string]*serviceSeries
+	byId     map[ObjectID]IService
 }
 
 func (t *ServiceManager) Service(name string) (IService, bool) {
@@ -41,6 +43,11 @@ func (t *ServiceManager) Service(name string) (IService, bool) {
 	}
 
 	return nil, ok
+}
+
+func (t *ServiceManager) ServiceById(id ObjectID) (IService, bool) {
+	s, ok := t.byId[id]
+	return s, ok
 }
 
 func (t *ServiceManager) NameList() (list []string) {
@@ -59,6 +66,8 @@ func (t *ServiceManager) register(service IService) error {
 	}
 
 	sList.Lists[s.ID] = service
+	t.byId[s.ID] = service
+
 	return nil
 }
 
