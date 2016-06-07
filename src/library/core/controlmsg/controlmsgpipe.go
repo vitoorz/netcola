@@ -1,5 +1,9 @@
 package controlmsg
 
+import (
+	"library/logger"
+)
+
 type ControlMsgPipe struct {
 	Cmd  chan *ControlMsg
 	Echo chan *ControlMsg
@@ -53,4 +57,40 @@ func (p *ControlMsgPipe) WriteCmdNonblock(msg *ControlMsg) bool {
 	default:
 	}
 	return false
+}
+
+func (t *ControlMsgPipe) SysControlEntry(serviceName string, msg *ControlMsg) (int, int) {
+	switch msg.MsgType {
+	case ControlMsgExit:
+		logger.Info("%s:ControlMsgPipe.Cmd Read %d", serviceName, msg.MsgType)
+		t.Echo <- &ControlMsg{MsgType: ControlMsgExit}
+		logger.Info("%s:exit", serviceName)
+		return NextActionReturn, ProcessStatOK
+	case ControlMsgPause:
+		logger.Info("%s:paused", serviceName)
+		t.Echo <- &ControlMsg{MsgType: ControlMsgPause}
+		for {
+			var resume bool = false
+			select {
+			case msg, ok := <-t.Cmd:
+				if !ok {
+					logger.Info("%s:Cmd Read error", serviceName)
+					break
+				}
+				switch msg.MsgType {
+				case ControlMsgResume:
+					t.Echo <- &ControlMsg{MsgType: ControlMsgResume}
+					resume = true
+					break
+				}
+			}
+			if resume {
+				break
+			}
+		}
+		logger.Info("%s:resumed", serviceName)
+	default:
+		return NextActionContinue, ProcessStatIgnore
+	}
+	return NextActionContinue, ProcessStatOK
 }

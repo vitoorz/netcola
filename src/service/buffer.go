@@ -33,7 +33,8 @@ func (t *BufferPool) Len() int {
 	return len(t.Pool)
 }
 
-func (t *BufferPool) Reborn() []*dm.DataMsg {
+//consumer
+func (t *BufferPool) reborn() []*dm.DataMsg {
 	t.Cond.L.Lock()
 	for len(t.Pool) <= 0 { //see usage of cond.wait(), this loop is needed
 		t.Cond.Wait()
@@ -50,16 +51,18 @@ func (t *BufferPool) Reborn() []*dm.DataMsg {
 	return pool
 }
 
+//provider
 func (t *BufferPool) Append(msg *dm.DataMsg) {
-	t.Lock()
-	defer t.Unlock()
+	t.Cond.L.Lock()
 	t.Pool = append(t.Pool, msg)
 	t.Cond.Signal()
+	t.Cond.L.Unlock()
 }
 
+//should use lock to block for loop
 func (t *BufferPool) Daemon() {
 	for {
-		todo := t.Reborn() //, hasPage
+		todo := t.reborn()
 		for _, msg := range todo {
 			ok := t.Host.Instance.DataHandler(msg)
 			if !ok {

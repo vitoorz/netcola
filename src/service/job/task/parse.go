@@ -27,5 +27,9 @@ func Parse(in string) int {
 	if strings.Contains(in, "service") {
 		return taskServiceList
 	}
+	if strings.Contains(in, "pprof") {
+		return taskPProf
+	}
+
 	return taskUnknown
 }

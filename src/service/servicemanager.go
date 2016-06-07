@@ -8,11 +8,13 @@ import (
 import (
 	dm "library/core/datamsg"
 	. "library/idgen"
+	"library/logger"
 )
 
 //the only service manager instance in process, will maintain all service instance
 var ServicePool = &ServiceManager{
 	services: make(map[string]*serviceSeries, 0),
+	byId:     make(map[ObjectID]IService, 0),
 }
 
 //Service with the same name, will have the same function
@@ -28,6 +30,7 @@ func newServiceSeries() *serviceSeries {
 
 type ServiceManager struct {
 	services map[string]*serviceSeries
+	byId     map[ObjectID]IService
 }
 
 func (t *ServiceManager) Service(name string) (IService, bool) {
@@ -40,6 +43,11 @@ func (t *ServiceManager) Service(name string) (IService, bool) {
 	}
 
 	return nil, ok
+}
+
+func (t *ServiceManager) ServiceById(id ObjectID) (IService, bool) {
+	s, ok := t.byId[id]
+	return s, ok
 }
 
 func (t *ServiceManager) NameList() (list []string) {
@@ -58,16 +66,28 @@ func (t *ServiceManager) register(service IService) error {
 	}
 
 	sList.Lists[s.ID] = service
+	t.byId[s.ID] = service
+
 	return nil
 }
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
+	instance := s.Self()
 	if s.Start(bus) {
-		go s.Self().Buffer.Daemon()
-		go s.Self().Background()
+		doBuff, doSysBackground := false, false
+		if instance.Buffer != nil {
+			go instance.Buffer.Daemon()
+			doBuff = true
+		}
+		if !instance.SelfDrive {
+			go instance.Background()
+			doSysBackground = true
+		}
+		logger.Info("Service %16s | doBuff = %v, doSysBackground = %v", instance.Name, doBuff, doSysBackground)
 		ServicePool.register(s)
 		return true
 	} else {
+		logger.Error("start %s failed", instance.Name)
 		return false
 	}
 }

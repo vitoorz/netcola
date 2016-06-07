@@ -14,6 +14,7 @@ const (
 	taskMongoCreate
 	taskEnv
 	taskServiceList
+	taskPProf
 )
 
 func doNothing(in *dm.DataMsg) {
@@ -30,4 +31,5 @@ var Route = map[int](func(*dm.DataMsg)){
 	taskMongoCreate: doMongoCreate,
 	taskEnv:         doSysEnv,
 	taskServiceList: doService,
+	taskPProf:       doPProf,
 }

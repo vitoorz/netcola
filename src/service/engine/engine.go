@@ -9,12 +9,6 @@ import (
 
 const ServiceName = "engine"
 
-const (
-	Break = iota
-	Continue
-	Return
-)
-
 type engineType struct {
 	service.Service
 	BUS *dm.DataMsgPipe
@@ -25,14 +19,13 @@ func NewEngine(name string) *engineType {
 	t.Service = *service.NewService(ServiceName)
 	t.BUS = dm.NewDataMsgPipe(0)
 	t.Name = name
-	t.Buffer = service.NewBufferPool(&t.Service)
+	t.SelfDrive = true
 	t.Instance = t
 	return t
 }
 
 func (t *engineType) engine() {
 	logger.Info("%s:service running", t.Name)
-
 	var next, fun int = cm.NextActionContinue, cm.ProcessStatUnknown
 	for {
 		select {
@@ -41,7 +34,7 @@ func (t *engineType) engine() {
 				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
-			next, fun = t.ControlHandler(msg)
+			next, fun = t.SysControlEntry(t.Name, msg)
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
