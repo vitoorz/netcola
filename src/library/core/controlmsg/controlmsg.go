@@ -10,6 +10,20 @@ const (
 	ControlMsgMax
 )
 
+const (
+	ProcessStatOK = iota
+	ProcessStatIgnore
+	ProcessStatPanic
+	ProcessPipeFull
+	ProcessStatUnknown
+)
+
+const (
+	NextActionBreak = iota
+	NextActionContinue
+	NextActionReturn
+)
+
 type ControlMsg struct {
 	MsgType int
 	Payload interface{}

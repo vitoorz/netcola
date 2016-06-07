@@ -68,7 +68,7 @@ func (t *watcherType) ControlHandler(msg *cm.ControlMsg) (int, int) {
 		}
 		t.objectProcess(msg.MsgType, object)
 	}
-	return Continue, service.FunOK
+	return cm.NextActionContinue, cm.ProcessStatOK
 }
 
 func (t *watcherType) objectProcess(cmd int, object string) {

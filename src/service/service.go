@@ -11,12 +11,6 @@ import (
 	"library/logger"
 )
 
-const (
-	Break = iota
-	Continue
-	Return
-)
-
 type Service struct {
 	sync.RWMutex
 	ID    idgen.ObjectID
@@ -45,7 +39,7 @@ func (t *Service) Self() *Service {
 
 func (t *Service) Background() {
 	logger.Info("%s:service running", t.Name)
-	var next int = Continue
+	var next int = cm.NextActionContinue
 	for {
 		select {
 		case msg, ok := <-t.Cmd:
@@ -65,11 +59,11 @@ func (t *Service) Background() {
 		}
 
 		switch next {
-		case Break:
+		case cm.NextActionBreak:
 			break
-		case Return:
+		case cm.NextActionReturn:
 			return
-		case Continue:
+		case cm.NextActionContinue:
 		}
 	}
 	return
