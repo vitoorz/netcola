@@ -17,9 +17,7 @@ import (
 	"service/job"
 	"service/mongo"
 	"service/privatetcp"
-	"service/ticker"
 	"service/timer"
-	"service/watchdog"
 )
 
 func stopAndCleanMemory() {
@@ -50,9 +48,6 @@ func main() {
 	enginesrv := engine.NewEngine("engine")
 	enginesrv.Start(nil)
 
-	tickersrv := ticker.NewTicker("ticker")
-	service.StartService(tickersrv, enginesrv.BUS)
-
 	jobsrv := job.NewJob("job")
 	service.StartService(jobsrv, enginesrv.BUS)
 
@@ -64,11 +59,6 @@ func main() {
 
 	tcpsrv := privatetcp.NewPrivateTCPServer("tcpserver", "0.0.0.0", "7171")
 	service.StartService(tcpsrv, enginesrv.BUS)
-
-	watcher := watchdog.NewWatcher("watcher")
-	service.StartService(watcher, enginesrv.BUS)
-
-	tickersrv.BookedBy(watcher, 1)
 
 	for {
 		select {
