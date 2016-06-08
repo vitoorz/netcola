@@ -11,7 +11,6 @@ import (
 )
 
 type BufferPool struct {
-	sync.Mutex
 	Cond *sync.Cond //as a conditional variable
 	Host *Service
 	cm.ControlMsgPipe
@@ -28,8 +27,8 @@ func NewBufferPool(h *Service) *BufferPool {
 }
 
 func (t *BufferPool) Len() int {
-	t.Lock()
-	defer t.Unlock()
+	t.Cond.L.Lock()
+	defer t.Cond.L.Unlock()
 	return len(t.Pool)
 }
 
@@ -39,15 +38,11 @@ func (t *BufferPool) reborn() []*dm.DataMsg {
 	for len(t.Pool) <= 0 { //see usage of cond.wait(), this loop is needed
 		t.Cond.Wait()
 	}
-	t.Cond.L.Unlock()
 	logger.Info("%s:buffer reborn wake up", t.Host.Name)
-
 	pool := t.Pool
-	newPool := make([]*dm.DataMsg, 0)
 
-	t.Lock()
-	defer t.Unlock()
-	t.Pool = newPool
+	t.Pool = make([]*dm.DataMsg, 0)
+	t.Cond.L.Unlock()
 	return pool
 }
 
