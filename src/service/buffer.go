@@ -56,9 +56,11 @@ func (t *BufferPool) Append(msg *dm.DataMsg) {
 
 //should use lock to block for loop
 func (t *BufferPool) Daemon() {
+
 	for {
 		todo := t.reborn()
 		for _, msg := range todo {
+			logger.Debug("todo elem:%+v, host:%v", msg, t.Host.Name)
 			ok := t.Host.Instance.DataHandler(msg)
 			if !ok {
 				logger.Error("%s:DataHandler failed", t.Host.Name)

@@ -67,7 +67,7 @@ func main() {
 				logger.Error("sigint echo error %t", ok)
 				continue
 			}
-			logger.Info("receive:signal echo:%v", sigMsg)
+			logger.Info("receive:signal echo:%+v", sigMsg)
 			enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 			<-enginesrv.Echo
 			return
@@ -76,7 +76,7 @@ func main() {
 				logger.Error("sigterm echo error %t", ok)
 				continue
 			}
-			logger.Info("receive:signal echo:%v", sigMsg)
+			logger.Info("receive:signal echo:%+v", sigMsg)
 			enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
 			<-enginesrv.Echo
 			return

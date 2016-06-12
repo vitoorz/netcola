@@ -12,7 +12,7 @@ import (
 const ServiceName = "mongo"
 
 type mongoType struct {
-	service.Service
+	*service.Service
 	output  *dm.DataMsgPipe
 	ip      string
 	port    string
@@ -21,13 +21,12 @@ type mongoType struct {
 
 func NewMongo(name, ip, port string) *mongoType {
 	t := &mongoType{}
-	t.Service = *service.NewService(ServiceName)
+	t.Service = service.NewService(ServiceName)
 	t.Name = name
 	t.output = nil
 	t.ip = ip
 	t.port = port
 	t.session = nil
-	t.Buffer = service.NewBufferPool(&t.Service)
 	t.Instance = t
 	return t
 }

@@ -1,11 +1,6 @@
 package service
 
 import (
-	"errors"
-	"fmt"
-)
-
-import (
 	dm "library/core/datamsg"
 	. "library/idgen"
 	"library/logger"
@@ -72,30 +67,26 @@ func (t *ServiceManager) register(service IService) error {
 }
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
+	logger.Info("start service:host:%v,instance:%+v", s.Self().Name, s.Self().Instance)
 	parent := s.Self()
 	if s.Start(bus) {
-		useBuffer := false
-		if parent.Buffer != nil {
-			go parent.Buffer.Daemon()
-			useBuffer = true
-		}
-		go parent.Background()
-		logger.Info("Service %16s | user buffer:%v", parent.Name, useBuffer)
 		ServicePool.register(s)
+		go parent.Background()
+		go parent.Buffer.Daemon()
 		return true
 	} else {
-		logger.Error("start %s failed", parent.Name)
+		logger.Error("start service %s failed", parent.Name)
 		return false
 	}
 }
 
 //send down (mostly request) data message to the right receiver
-func (t *ServiceManager) SendData(msg *dm.DataMsg) error {
+func (t *ServiceManager) SendData(msg *dm.DataMsg) bool {
 	s, ok := t.Service(msg.Receiver)
 	if !ok {
-		return errors.New(fmt.Sprint("Service %s to receive message not exist", msg.Receiver))
+		logger.Error("Service %s to receive message not exist:%v", msg.Receiver)
+		return ok
 	}
 	s.Self().DataMsgPipe.WritePipeNB(msg)
-
-	return nil
+	return true
 }

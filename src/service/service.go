@@ -16,8 +16,8 @@ type Service struct {
 	ID    idgen.ObjectID
 	Name  string
 	State StateT
-	cm.ControlMsgPipe
-	dm.DataMsgPipe
+	*cm.ControlMsgPipe
+	*dm.DataMsgPipe
 	Buffer   *BufferPool
 	Instance IService
 }
@@ -27,9 +27,9 @@ func NewService(name string) *Service {
 	t.ID = idgen.NewObjectID()
 	t.Name = name
 	t.State = StateInit
-	t.ControlMsgPipe = *cm.NewControlMsgPipe()
-	t.DataMsgPipe = *dm.NewDataMsgPipe(0)
-	t.Buffer = nil
+	t.ControlMsgPipe = cm.NewControlMsgPipe()
+	t.DataMsgPipe = dm.NewDataMsgPipe(0)
+	t.Buffer = NewBufferPool(t)
 	return t
 }
 
@@ -40,7 +40,7 @@ func (t *Service) Self() *Service {
 func (t *Service) Background() {
 	logger.Info("%s:service running", t.Name)
 	var next, stat int = cm.NextActionContinue, cm.ProcessStatOK
-	logger.Info("Sysbackgroud for service running: %s", t.Name)
+	logger.Info("%s:backgroud running", t.Name)
 
 	for {
 		select {
@@ -73,14 +73,4 @@ func (t *Service) Background() {
 	}
 	return
 
-}
-
-type IService interface {
-	Start(bus *dm.DataMsgPipe) bool
-	Pause() bool
-	Resume() bool
-	Exit() bool
-	Self() *Service
-	ControlHandler(*cm.ControlMsg) (int, int)
-	DataHandler(*dm.DataMsg) bool
 }

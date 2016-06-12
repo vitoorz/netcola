@@ -15,6 +15,7 @@ const (
 	ProcessStatIgnore
 	ProcessStatPanic
 	ProcessPipeFull
+	ProcessPipeReceiverLost
 	ProcessStatUnknown
 )
 

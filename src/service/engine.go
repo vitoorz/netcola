@@ -21,7 +21,7 @@ func NewEngine(name string) *engineType {
 }
 
 func (t *engineType) engine() {
-	logger.Info("%s:service running", t.Name)
+	logger.Info("%s:running", t.Name)
 	var next, fun int = cm.NextActionContinue, cm.ProcessStatUnknown
 	for {
 		select {
@@ -30,13 +30,15 @@ func (t *engineType) engine() {
 				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
-			next, fun = t.SysControlEntry(t.Name, msg)
+			logger.Debug("1")
+			next, fun = t.ControlHandler(msg)
 			break
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
+			logger.Debug("2")
 			next, fun = t.DataEntry(msg)
 			break
 		case msg, ok := <-t.BUS.ReadPipe():
@@ -44,10 +46,11 @@ func (t *engineType) engine() {
 				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
+			logger.Debug("3")
 			logger.Debug("%s:read bus chan msg:%+v", t.Name, msg)
 			next, fun = t.BusSchedule(msg)
-			if fun == cm.ProcessPipeFull {
-				logger.Warn("%s:need do something when full", t.Name)
+			if fun == cm.ProcessPipeReceiverLost {
+				logger.Warn("%s:reciver lost:%v", t.Name, msg.Receiver)
 			}
 			break
 		}
@@ -64,8 +67,12 @@ func (t *engineType) engine() {
 }
 
 func (t *engineType) BusSchedule(msg *dm.DataMsg) (operate int, funCode int) {
-	ServicePool.SendData(msg)
-	return cm.NextActionContinue, cm.ProcessStatOK
+	funCode = cm.ProcessStatOK
+	ok := ServicePool.SendData(msg)
+	if !ok {
+		funCode = cm.ProcessPipeReceiverLost
+	}
+	return cm.NextActionContinue, funCode
 }
 
 func (t *engineType) Start(bus *dm.DataMsgPipe) bool {

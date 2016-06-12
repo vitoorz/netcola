@@ -12,7 +12,7 @@ import (
 const ServiceName = "privatetcpserver"
 
 type privateTCPServer struct {
-	service.Service
+	*service.Service
 	output *dm.DataMsgPipe
 
 	listener *net.TCPListener
@@ -22,12 +22,11 @@ type privateTCPServer struct {
 
 func NewPrivateTCPServer(name, ip, port string) *privateTCPServer {
 	t := &privateTCPServer{}
-	t.Service = *service.NewService(ServiceName)
+	t.Service = service.NewService(ServiceName)
 	t.output = nil
 	t.Name = name
 	t.ip = ip
 	t.port = port
-	t.Buffer = service.NewBufferPool(&t.Service)
 	t.Instance = t
 	return t
 }
