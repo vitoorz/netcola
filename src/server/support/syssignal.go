@@ -2,8 +2,8 @@ package support
 
 import (
 	cm "library/core/controlmsg"
+	sig "module/syssignal"
 	"os"
-	sig "service/syssignal"
 )
 
 var SignalService *sig.SignalService = nil

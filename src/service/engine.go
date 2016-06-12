@@ -7,14 +7,16 @@ import (
 )
 
 type engineType struct {
-	cm.ControlMsgPipe
-	dm.DataMsgPipe
+	*cm.ControlMsgPipe
+	*dm.DataMsgPipe
 	BUS  *dm.DataMsgPipe
 	Name string
 }
 
 func NewEngine(name string) *engineType {
 	t := &engineType{}
+	t.ControlMsgPipe = cm.NewControlMsgPipe()
+	t.DataMsgPipe = dm.NewDataMsgPipe(0)
 	t.Name = name
 	t.BUS = dm.NewDataMsgPipe(0)
 	return t
@@ -30,7 +32,6 @@ func (t *engineType) engine() {
 				logger.Info("%s:Cmd Read error", t.Name)
 				break
 			}
-			logger.Debug("1")
 			next, fun = t.ControlHandler(msg)
 			break
 		case msg, ok := <-t.ReadPipe():
@@ -38,7 +39,6 @@ func (t *engineType) engine() {
 				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
-			logger.Debug("2")
 			next, fun = t.DataEntry(msg)
 			break
 		case msg, ok := <-t.BUS.ReadPipe():
@@ -46,7 +46,6 @@ func (t *engineType) engine() {
 				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
-			logger.Debug("3")
 			logger.Debug("%s:read bus chan msg:%+v", t.Name, msg)
 			next, fun = t.BusSchedule(msg)
 			if fun == cm.ProcessPipeReceiverLost {

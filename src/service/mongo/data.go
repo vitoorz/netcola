@@ -29,6 +29,6 @@ func (t *mongoType) DataHandler(msg *dm.DataMsg) bool {
 
 	msg.Receiver = msg.Sender
 	msg.Sender = t.Name
-	t.output.WritePipeNB(msg)
+	t.output.WritePipeNoBlock(msg)
 	return true
 }

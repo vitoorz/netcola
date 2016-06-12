@@ -3,7 +3,7 @@ package main
 import (
 	cm "library/core/controlmsg"
 	"library/logger"
-	"service/syssignal"
+	"module/syssignal"
 )
 
 func InterruptHandler(i interface{}) *cm.ControlMsg {

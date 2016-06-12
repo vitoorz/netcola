@@ -21,7 +21,7 @@ func (p *ControlMsgPipe) CloseControlMsgPipe() {
 	close(p.Echo)
 }
 
-func (p *ControlMsgPipe) ReadEchoNonblock() (*ControlMsg, bool) {
+func (p *ControlMsgPipe) ReadEchoNoBlock() (*ControlMsg, bool) {
 	var msg *ControlMsg = nil
 	select {
 	case msg = <-p.Echo:
@@ -31,7 +31,7 @@ func (p *ControlMsgPipe) ReadEchoNonblock() (*ControlMsg, bool) {
 	return nil, false
 }
 
-func (p *ControlMsgPipe) WriteEchoNonblock(msg *ControlMsg) bool {
+func (p *ControlMsgPipe) WriteEchoNoBlock(msg *ControlMsg) bool {
 	select {
 	case p.Echo <- msg:
 		return true
@@ -40,7 +40,7 @@ func (p *ControlMsgPipe) WriteEchoNonblock(msg *ControlMsg) bool {
 	return false
 }
 
-func (p *ControlMsgPipe) ReadCmdNonblock() (*ControlMsg, bool) {
+func (p *ControlMsgPipe) ReadCmdNoBlock() (*ControlMsg, bool) {
 	var msg *ControlMsg = nil
 	select {
 	case msg = <-p.Cmd:
@@ -50,7 +50,7 @@ func (p *ControlMsgPipe) ReadCmdNonblock() (*ControlMsg, bool) {
 	return nil, false
 }
 
-func (p *ControlMsgPipe) WriteCmdNonblock(msg *ControlMsg) bool {
+func (p *ControlMsgPipe) WriteCmdNoBlock(msg *ControlMsg) bool {
 	select {
 	case p.Cmd <- msg:
 		return true

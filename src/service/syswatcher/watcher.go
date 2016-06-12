@@ -73,7 +73,7 @@ func (t *watcherType) doTickNotify(curTime int64) {
 	for _, ticker := range t.tickerBooker {
 		if ticker.TickAt >= curTime {
 			msg := &cm.ControlMsg{MsgType: cm.ControlMsgTick, Payload: nil}
-			if ticker.Service.Self().WriteCmdNonblock(msg) {
+			if ticker.Service.Self().WriteCmdNoBlock(msg) {
 				ticker.TickAt = curTime + ticker.TickStep
 			}
 		}

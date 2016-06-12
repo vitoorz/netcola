@@ -22,12 +22,12 @@ func (t *DataMsgPipe) ReadPipe() chan *DataMsg {
 	return t.Pipe
 }
 
-func (t *DataMsgPipe) WritePipeNB(msg *DataMsg) bool {
+func (t *DataMsgPipe) WritePipeNoBlock(msg *DataMsg) bool {
 	select {
 	case t.Pipe <- msg:
 		break
 	default:
-		logger.Warn("Data chan full, so fork a routine wait here")
+		logger.Info("Data chan full, so fork a routine wait here")
 		go func() {
 			t.Pipe <- msg
 		}()

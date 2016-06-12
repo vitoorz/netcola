@@ -87,6 +87,6 @@ func (t *ServiceManager) SendData(msg *dm.DataMsg) bool {
 		logger.Error("Service %s to receive message not exist:%v", msg.Receiver)
 		return ok
 	}
-	s.Self().DataMsgPipe.WritePipeNB(msg)
+	s.Self().DataMsgPipe.WritePipeNoBlock(msg)
 	return true
 }

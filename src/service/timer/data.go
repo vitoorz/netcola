@@ -14,7 +14,7 @@ func (t *timerType) callBack(e ts.Event, msg *dm.DataMsg) {
 		logger.Info("event wake up:at:%s", wakeAt.String())
 		task.DoLater(msg)
 		msg.Receiver, msg.Sender = msg.Sender, msg.Receiver
-		t.output.WritePipeNB(msg)
+		t.output.WritePipeNoBlock(msg)
 	}()
 }
 

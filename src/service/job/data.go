@@ -25,7 +25,7 @@ func (t *jobType) DataHandler(msg *dm.DataMsg) bool {
 		msg.Receiver = dm.NoReceiver
 	}
 	if msg.Receiver != dm.NoReceiver {
-		t.Output.WritePipeNB(msg)
+		t.Output.WritePipeNoBlock(msg)
 	}
 	return true
 }
