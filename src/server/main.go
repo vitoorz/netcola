@@ -2,9 +2,7 @@ package main
 
 import (
 	"math/rand"
-	"os"
 	"runtime"
-	"syscall"
 	"time"
 )
 
@@ -12,7 +10,6 @@ import (
 	cm "library/core/controlmsg"
 	"library/idgen"
 	"library/logger"
-	"server/support"
 	"service"
 	"service/job"
 	"service/mongo"
@@ -40,45 +37,44 @@ func main() {
 
 	idgen.InitIDGen("1")
 
-	support.RegisterSignalHandler(os.Interrupt, InterruptHandler, nil)
-	support.RegisterSignalHandler(syscall.SIGTERM, SIGTERMHandler, nil)
+	signalMod := initSystemSignalHandler()
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 
-	enginesrv := service.NewEngine("engine")
-	enginesrv.Start(nil)
+	distributor := service.NewEngine("engine")
+	distributor.Start(nil)
 
 	jobsrv := job.NewJob("job")
-	service.StartService(jobsrv, enginesrv.BUS)
+	service.StartService(jobsrv, distributor.BUS)
 
 	timersrv := timer.NewTimer("timer")
-	service.StartService(timersrv, enginesrv.BUS)
+	service.StartService(timersrv, distributor.BUS)
 
 	mongosrv := mongo.NewMongo("mongo", "127.0.0.1", "27017")
-	service.StartService(mongosrv, enginesrv.BUS)
+	service.StartService(mongosrv, distributor.BUS)
 
 	tcpsrv := privatetcp.NewPrivateTCPServer("tcpserver", "0.0.0.0", "7171")
-	service.StartService(tcpsrv, enginesrv.BUS)
+	service.StartService(tcpsrv, distributor.BUS)
 
 	for {
 		select {
-		case sigMsg, ok := <-support.SignalService.Echo:
+		case sigMsg, ok := <-signalMod.Echo:
 			if !ok {
 				logger.Error("sigint echo error %t", ok)
 				continue
 			}
 			logger.Info("receive:signal echo:%+v", sigMsg)
-			enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-			<-enginesrv.Echo
+			distributor.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			<-distributor.Echo
 			return
-		case sigMsg, ok := <-support.SignalService.Echo:
+		case sigMsg, ok := <-signalMod.Echo:
 			if !ok {
 				logger.Error("sigterm echo error %t", ok)
 				continue
 			}
 			logger.Info("receive:signal echo:%+v", sigMsg)
-			enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
-			<-enginesrv.Echo
+			distributor.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			<-distributor.Echo
 			return
 		}
 	}

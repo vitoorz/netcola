@@ -17,7 +17,7 @@ func InterruptHandler3(i interface{}) *cm.ControlMsg {
 	return &cm.ControlMsg{MsgType: n}
 }
 
-func eq(s *SignalService, exp int) bool {
+func eq(s *SignalModule, exp int) bool {
 	re := <-s.Echo
 	if re.MsgType == exp {
 		return true
@@ -30,7 +30,7 @@ func eq(s *SignalService, exp int) bool {
 // todo: do some parallel test
 func TestSignal(t *testing.T) {
 
-	var signalService *SignalService = NewSignalService()
+	var signalService *SignalModule = NewSignalService()
 	signalService.InitSignalService()
 
 	signalService.RegisterSignalCallback(os.Interrupt, InterruptHandler1, 11)
