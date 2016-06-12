@@ -18,9 +18,8 @@ type Service struct {
 	State StateT
 	cm.ControlMsgPipe
 	dm.DataMsgPipe
-	Buffer    *BufferPool
-	SelfDrive bool
-	Instance  IService
+	Buffer   *BufferPool
+	Instance IService
 }
 
 func NewService(name string) *Service {

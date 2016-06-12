@@ -72,22 +72,19 @@ func (t *ServiceManager) register(service IService) error {
 }
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
-	instance := s.Self()
+	parent := s.Self()
 	if s.Start(bus) {
-		doBuff, doSysBackground := false, false
-		if instance.Buffer != nil {
-			go instance.Buffer.Daemon()
-			doBuff = true
+		useBuffer := false
+		if parent.Buffer != nil {
+			go parent.Buffer.Daemon()
+			useBuffer = true
 		}
-		if !instance.SelfDrive {
-			go instance.Background()
-			doSysBackground = true
-		}
-		logger.Info("Service %16s | doBuff = %v, doSysBackground = %v", instance.Name, doBuff, doSysBackground)
+		go parent.Background()
+		logger.Info("Service %16s | user buffer:%v", parent.Name, useBuffer)
 		ServicePool.register(s)
 		return true
 	} else {
-		logger.Error("start %s failed", instance.Name)
+		logger.Error("start %s failed", parent.Name)
 		return false
 	}
 }

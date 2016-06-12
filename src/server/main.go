@@ -9,11 +9,11 @@ import (
 )
 
 import (
+	cm "library/core/controlmsg"
 	"library/idgen"
 	"library/logger"
 	"server/support"
 	"service"
-	"service/engine"
 	"service/job"
 	"service/mongo"
 	"service/privatetcp"
@@ -47,7 +47,7 @@ func main() {
 	// good idea to stop the world and clean memory before get job
 	stopAndCleanMemory()
 
-	enginesrv := engine.NewEngine("engine")
+	enginesrv := service.NewEngine("engine")
 	enginesrv.Start(nil)
 
 	tickersrv := ticker.NewTicker("ticker")
@@ -78,7 +78,8 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
-			enginesrv.Exit()
+			enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			<-enginesrv.Echo
 			return
 		case sigMsg, ok := <-support.SignalService.Echo:
 			if !ok {
@@ -86,7 +87,8 @@ func main() {
 				continue
 			}
 			logger.Info("receive:signal echo:%v", sigMsg)
-			enginesrv.Exit()
+			enginesrv.Cmd <- &cm.ControlMsg{MsgType: cm.ControlMsgExit}
+			<-enginesrv.Echo
 			return
 		}
 	}
