@@ -46,7 +46,7 @@ func (t *engineType) engine() {
 				logger.Info("%s:DataPipe Read error", t.Name)
 				break
 			}
-			logger.Debug("%s:read bus chan msg:%+v", t.Name, msg)
+			//logger.Debug("%s:read bus chan msg:%+v", t.Name, msg)
 			next, fun = t.BusSchedule(msg)
 			if fun == cm.ProcessPipeReceiverLost {
 				logger.Warn("%s:reciver lost:%v", t.Name, msg.Receiver)

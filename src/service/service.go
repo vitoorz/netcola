@@ -9,11 +9,12 @@ import (
 	dm "library/core/datamsg"
 	"library/idgen"
 	"library/logger"
+	. "types"
 )
 
 type Service struct {
 	sync.RWMutex
-	ID    idgen.ObjectID
+	ID    ObjectID
 	Name  string
 	State StateT
 	*cm.ControlMsgPipe

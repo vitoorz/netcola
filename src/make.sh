@@ -30,6 +30,7 @@ main() {
     formatCode "$ProjectPath/src/library"
     formatCode "$ProjectPath/src/service"
     building "server" true
+    building "gateway" true
 }
 
 time main

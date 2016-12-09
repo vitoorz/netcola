@@ -8,11 +8,10 @@ import (
 
 import (
 	"library/logger"
+	. "types"
 )
 
 const LogicObjectDummy ObjectID = 0
-
-type ObjectID uint64
 
 // nodeSN stores machine id generated once and used in subsequent calls
 // to NewObjectId function.

@@ -2,8 +2,8 @@ package service
 
 import (
 	dm "library/core/datamsg"
-	. "library/idgen"
 	"library/logger"
+	. "types"
 )
 
 //the only service manager instance in process, will maintain all service instance
