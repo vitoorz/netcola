@@ -61,39 +61,40 @@ func (t *gatewayOutter) gatewayClient() {
 }
 
 func (t *gatewayOutter) gatewayClientConn(connection *net.TCPConn) {
-	clientMeta := &ClientConnectionMeta{ClientConn: connection}
+	clientMeta := NewClientMeta(connection)
 
-	for clientMeta.ClientConn != nil {
+	for clientMeta.Conn != nil {
 		head := make([]byte, NetMsgHeadNoIdSize)
 		_, err := io.ReadAtLeast(connection, head, NetMsgHeadNoIdSize)
 		if err != nil {
 			logger.Error("%s: read player %s req head[NOID] error: %s",
-				t.Name, clientMeta.UserId.ToIdString(), err.Error())
-			ClientLogout(clientMeta)
+				t.Name, clientMeta.ID, err.Error())
+			Clients.Logout(clientMeta)
 			break
 		}
 
 		msg, err := NewNetMsgFromHeadNoId(head)
 		if err != nil {
 			logger.Error("%s:decode player %s req head(NOID) error: %s",
-				t.Name, clientMeta.UserId.ToIdString(), err.Error())
-			ClientLogout(clientMeta)
+				t.Name, clientMeta.ID, err.Error())
+			Clients.Logout(clientMeta)
 			break
 		}
+
+		msg.MsgType = AddMsgFlag(msg.MsgType, NetMsgIdFlagClient)
 
 		_, err = io.ReadAtLeast(connection, msg.Content, int(msg.Size))
 		if err != nil {
-			logger.Error("%s: read player %s req [%d] payload error",
-				t.Name, clientMeta.UserId.ToIdString(), msg.OpCode)
-			ClientLogout(clientMeta)
+			logger.Error("%s: read player %s req [%s] payload error",
+				t.Name, clientMeta.ID, msg.TypeString())
+			Clients.Logout(clientMeta)
 			break
 		}
 
-		logger.Info("%s: get client message <%16s>", t.Name, msg.OpCode.ToString())
-		d := dm.NewDataMsg(ServiceName, "gatewayinner", Inner_MsgTypeC2G, msg)
+		d := dm.NewDataMsg(ServiceName, "gatewayinner", DataMsgFlagC2G, msg)
 		d.SetMeta(t.Name, clientMeta)
 		t.output.WritePipeNoBlock(d)
 	}
 
-	logger.Warn("%s: player %s connection exit", t.Name, clientMeta.UserId.ToIdString())
+	logger.Warn("%s: player %s connection exit", t.Name, clientMeta.ID)
 }

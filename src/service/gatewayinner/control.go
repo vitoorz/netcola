@@ -62,39 +62,41 @@ func (t *gatewayInner) gatewayServer() {
 
 //get one message from server connection
 func (t *gatewayInner) gatewayServerConn(connection *net.TCPConn) {
-	serverMeta := &ServerConnectionMeta{ServerConn: connection}
+	serverMeta := NewServerMeta(connection)
 
-	for serverMeta.ServerConn != nil {
+	for serverMeta.Conn != nil {
 		head := make([]byte, NetMsgHeadSize)
 		_, err := io.ReadAtLeast(connection, head, NetMsgHeadSize)
 		if err != nil {
 			logger.Error("%s: read server %s ack head(+ID) error: %s",
-				t.Name, serverMeta.ServerId.ToIdString(), err.Error())
-			ServerLogout(serverMeta)
+				t.Name, serverMeta.ID, err.Error())
+			Servers.Logout(serverMeta)
 			break
 		}
 
 		msg, err := NewNetMsgFromHead(head)
 		if err != nil {
 			logger.Error("%s: decode server %s ack head(+ID) error: %s",
-				t.Name, serverMeta.ServerId.ToIdString(), err.Error())
-			ServerLogout(serverMeta)
+				t.Name, serverMeta.ID, err.Error())
+			Servers.Logout(serverMeta)
 			break
 		}
+
+		msg.MsgType = AddMsgFlag(msg.MsgType, NetMsgIdFlagServer)
 
 		_, err = io.ReadAtLeast(connection, msg.Content, int(msg.Size))
 		if err != nil {
 			logger.Error("%s: read server %s ack payload error: %s",
-				t.Name, serverMeta.ServerId.ToIdString(), err.Error())
-			ServerLogout(serverMeta)
+				t.Name, serverMeta.ID, err.Error())
+			Servers.Logout(serverMeta)
 			break
 		}
 
-		logger.Info("%s: get server message <%16s>", t.Name, msg.OpCode.ToString())
-		d := dm.NewDataMsg(ServiceName, "gatewayoutter", Inner_MsgTypeG2C, msg)
+		d := dm.NewDataMsg(ServiceName, "gatewayoutter", DataMsgFlagG2C, msg)
 		d.SetMeta(t.Name, serverMeta)
 		t.output.WritePipeNoBlock(d)
 	}
 
-	logger.Warn("%s: server %s exit", t.Name, serverMeta.ServerId.ToIdString())
+	logger.Warn("%s: server %s exit", t.Name, serverMeta.ID)
+	Servers.Logout(serverMeta)
 }

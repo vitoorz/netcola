@@ -9,8 +9,8 @@ import (
 
 //messages receive from client
 func (t *gatewayInner) DataHandler(msg *dm.DataMsg) bool {
-	if msg.MsgType != Inner_MsgTypeC2G {
-		logger.Error("%s: recv invalid message type %d", t.Name, msg.MsgType)
+	if msg.MsgFlag != DataMsgFlagC2G {
+		logger.Error("%s: recv invalid message type %d", t.Name, msg.MsgFlag)
 		return false
 	}
 
@@ -20,7 +20,7 @@ func (t *gatewayInner) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	clientMeta, ok := meta.(*ClientConnectionMeta)
+	clientMeta, ok := meta.(*ConnMeta)
 	if !ok {
 		logger.Error("%s:wrong meta in datamsg(should be *ClientConnectionMeta):%+v", t.Name, meta)
 		return false
@@ -32,5 +32,5 @@ func (t *gatewayInner) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	return HandleC2GMsg(clientMeta, netMsg)
+	return HandleClientMessage(clientMeta, netMsg)
 }

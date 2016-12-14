@@ -5,26 +5,21 @@ import (
 	"strconv"
 )
 
+const (
+	DataMsgFlagC2G      = 1
+	DataMsgFlagG2C      = 2
+	DataMsgFlagG2S      = 3
+	DataMsgFlagS2G      = 4
+)
+
+//unix timestamp
+type UnixTS int64
+
 type ObjectID uint64
 
 func (id ObjectID) ToIdString() IdString {
 	return IdString(fmt.Sprintf("0x%x", id))
 }
-
-type PlayerId ObjectID
-
-func (p PlayerId) ToIdString() IdString {
-	return ObjectID(p).ToIdString()
-}
-
-type ServerId ObjectID
-
-func (s ServerId) ToIdString() IdString {
-	return ObjectID(s).ToIdString()
-}
-
-//unix timestamp
-type UnixTS int64
 
 type IdString string
 
@@ -35,21 +30,3 @@ func (id IdString) ToObjectID() ObjectID {
 	}
 	return ObjectID(value)
 }
-
-func (id IdString) ToPlayerId() PlayerId {
-	return PlayerId(id.ToObjectID())
-}
-
-func (id IdString) ToServerId() ServerId {
-	return ServerId(id.ToObjectID())
-}
-
-
-const (
-	Inner_MsgTypeUnknown  = 0
-	Inner_MsgTypeTelnet   = 1
-	Inner_MsgTypeC2G      = 2
-	Inner_MsgTypeG2C      = 3
-	Inner_MsgTypeG2S      = 4
-	Inner_MsgTypeS2G      = 5
-)

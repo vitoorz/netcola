@@ -1,7 +1,6 @@
 package servertcp
 
 import (
-	"github.com/golang/protobuf/proto"
 	"io"
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
@@ -63,10 +62,7 @@ func (t *serverTCP) readConn(connection net.Conn) {
 			break
 		}
 
-		logger.Info("%s: REQ %16s from gateway, ID %s",
-			t.Name, msg.OpCode.ToString(), msg.UserId.ToIdString())
-
-		d := dm.NewDataMsg(ServiceName, serverhandle.ServiceName, Inner_MsgTypeG2S, msg)
+		d := dm.NewDataMsg(ServiceName, serverhandle.ServiceName, DataMsgFlagG2S, msg)
 		d.SetMeta(t.Name, connection)
 		t.output.WritePipeNoBlock(d)
 	}
@@ -96,13 +92,11 @@ func (t *serverTCP) loginGateway() net.Conn {
 		time.Sleep(time.Second * retryTime)
 	}
 
-	req := &HeadBeat{TimeStamp: int32(time.Now().Unix()), Code: 0}
-	content, _ := proto.Marshal(req)
+	req := &ServerLoginReq{ServerId: "0x84a5d1600002c001", ServerName: "xixihaha"}
 
-	msg := &NetMsg{Content: content}
-	msg.UserId = IdString("0x84a5d1600002c001").ToPlayerId() //todo serverID
-	msg.OpCode = MT_HeatBeat
-	msg.SetPayLoad(req)
+	msg := &NetMsg{}
+	msg.ObjectID = IdString(req.ServerId).ToObjectID()
+	msg.SetPayLoad(MT_ServerLoginReq, req, NetMsgIdFlagServer)
 
 	bin, err := msg.BinaryProto()
 	if err != nil {

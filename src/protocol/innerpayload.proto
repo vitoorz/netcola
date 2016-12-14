@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message ServerLoginReq {
+    string server_id   = 1;
+    string server_name = 2;
+}
+
+message ServerLoginAck {
+    string server_id   = 1;
+}
+
+message ServerLoginOut {
+    string server_id   = 1;
+    int32  status      = 2;
+}
+

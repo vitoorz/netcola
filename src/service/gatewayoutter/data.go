@@ -7,10 +7,10 @@ import (
 	. "types"
 )
 
-//message from server
+//deal with message from server
 func (t *gatewayOutter) DataHandler(msg *dm.DataMsg) bool {
-	if msg.MsgType != Inner_MsgTypeG2C {
-		logger.Error("%s: recv invalid message type %d", t.Name, msg.MsgType)
+	if msg.MsgFlag != DataMsgFlagG2C {
+		logger.Error("%s: recv invalid message type %d", t.Name, msg.MsgFlag)
 		return false
 	}
 
@@ -20,7 +20,7 @@ func (t *gatewayOutter) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	serverMeta, ok := meta.(*ServerConnectionMeta)
+	serverMeta, ok := meta.(*ConnMeta)
 	if !ok {
 		logger.Error("%s:wrong meta in datamsg(should be *ClientConnectionMeta):%+v", t.Name, meta)
 		return false
@@ -32,5 +32,5 @@ func (t *gatewayOutter) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	return HandleG2CMsg(serverMeta, netMsg)
+	return HandleMessageFromServer(serverMeta, netMsg)
 }

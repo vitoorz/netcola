@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"errors"
 	pb "github.com/golang/protobuf/proto"
 	"library/logger"
 	"net"
@@ -8,123 +9,130 @@ import (
 	. "types"
 )
 
-type ServerConnectionMeta struct {
-	ServerId   ServerId
-	ServerConn *net.TCPConn
-	//ClientsConn map[PlayerId]*net.TCPConn
+const (
+	connMetaTypeServer = 1
+	connMetaTypeClient = 2
+)
+
+var Servers = &metaManage{
+	connections: make(map[IdString]*ConnMeta, 0),
+	metaType:    connMetaTypeServer,
 }
 
-type serverManage struct {
-	Servers map[ServerId]*ServerConnectionMeta
-	sync.Mutex
+var Clients = &metaManage{
+	connections: make(map[IdString]*ConnMeta, 0),
+	metaType:    connMetaTypeClient,
 }
 
-var servers = &serverManage{
-	Servers: make(map[ServerId]*ServerConnectionMeta, 0),
+func NewServerMeta(conn *net.TCPConn) *ConnMeta {
+	return &ConnMeta{metaType: connMetaTypeServer, Conn: conn}
 }
 
-func serverLogin(connMeta *ServerConnectionMeta, heartBeat *NetMsg) {
-	req := &HeadBeat{}
-	if err := pb.Unmarshal(heartBeat.Content, req); err != nil {
-		logger.Warn("unmarshal server login req error")
+func NewClientMeta(conn *net.TCPConn) *ConnMeta {
+	return &ConnMeta{metaType: connMetaTypeClient, Conn: conn}
+}
+
+type ConnMeta struct {
+	ID          IdString
+	Conn        *net.TCPConn
+	LoginAt     UnixTS
+	LastSend    UnixTS
+	LastRecv    UnixTS
+	SentByte    int
+	RecvByte    int
+	SentNum     int
+	RecvNum     int
+	ForwardMeta *ConnMeta
+
+	ObjID ObjectID
+
+	metaType int
+}
+
+type metaManage struct {
+	lock        sync.Mutex
+	connections map[IdString]*ConnMeta
+	metaType    int
+}
+
+func (mm *metaManage) mineMeta(meta *ConnMeta) bool {
+	if meta == nil {
+		return false
+	}
+	if meta.metaType != mm.metaType {
+		logger.Error("Connection meta useage error: mm %d accept %d", mm.metaType, meta.metaType)
+		return false
+	}
+	return true
+}
+
+func (mm *metaManage) GetMeta(id IdString) (*ConnMeta, bool) {
+	mm.lock.Lock()
+	meta, ok := mm.connections[id]
+	mm.lock.Unlock()
+	return meta, ok
+}
+
+func (mm *metaManage) Logout(meta *ConnMeta) {
+	if ok := mm.mineMeta(meta); !ok {
 		return
 	}
-	connMeta.ServerId = ServerId(heartBeat.UserId)
-	logger.Info("Server %s logined", connMeta.ServerId.ToIdString())
 
-	//check req.Code == 0
-	servers.Lock()
-	servers.Servers[connMeta.ServerId] = connMeta
-	servers.Unlock()
+	mm.lock.Lock()
+	delete(mm.connections, meta.ID)
+	mm.lock.Unlock()
 
-	binary, _ := heartBeat.BinaryProto()
-	connMeta.ServerConn.Write(binary)
-}
-
-func ServerLogout(connMeta *ServerConnectionMeta) {
-	servers.Lock()
-	delete(servers.Servers, connMeta.ServerId)
-	servers.Unlock()
-
-	if connMeta.ServerConn != nil {
-		connMeta.ServerConn.Close()
+	if meta.Conn != nil {
+		meta.Conn.Close()
+		meta.Conn = nil
 	}
-
-	connMeta.ServerConn = nil
+	meta.ForwardMeta = nil
 }
 
-func getServerMeta(serverId ServerId) (*ServerConnectionMeta, bool) {
-	m, ok := servers.Servers[serverId]
-	return m, ok
-}
-
-type ClientConnectionMeta struct {
-	UserId     PlayerId
-	UUID       string
-	MessageNum int
-	LoginAt    UnixTS
-	LastBeat   UnixTS
-
-	UserIdBinary []byte
-	ClientConn   *net.TCPConn
-
-	ServerMeta *ServerConnectionMeta
-}
-
-type clientManage struct {
-	Clients map[PlayerId]*ClientConnectionMeta
-	sync.Mutex
-}
-
-var clients = &clientManage{
-	Clients: make(map[PlayerId]*ClientConnectionMeta, 0),
-}
-
-func clientLogin(conMeta *ClientConnectionMeta, loginReq *NetMsg) bool {
-	req := &LoginReq{}
-	if err := pb.Unmarshal(loginReq.Content, req); err != nil {
-		logger.Error("unmarshal client login req error")
+func (mm *metaManage) Login(meta *ConnMeta, content []byte) bool {
+	if ok := mm.mineMeta(meta); !ok {
 		return false
 	}
 
-	conMeta.UserId = IdString(req.UserId).ToPlayerId()
+	switch meta.metaType {
+	case connMetaTypeClient:
+		req := &LoginReq{}
+		if err := pb.Unmarshal(content, req); err != nil {
+			return false
+		}
+		meta.ID = IdString(req.UserId)
+		serverMeta, ok := Servers.GetMeta(IdString(req.ServerId))
+		if !ok || serverMeta.Conn == nil {
+			logger.Error("client %s login server %s error, server not online", meta.ID, req.ServerId)
+			return false
+		}
+		meta.ForwardMeta = serverMeta
 
-	serverMeta, ok := getServerMeta(IdString(req.ServerId).ToServerId())
-	if !ok {
-		logger.Warn("player %s try to login server %s, server not exist", req.UserId, req.ServerId)
-		ClientLogout(conMeta)
-		return false
+	case connMetaTypeServer:
+		req := &ServerLoginReq{}
+		if err := pb.Unmarshal(content, req); err != nil {
+			return false
+		}
+		meta.ID = IdString(req.ServerId)
 	}
 
-	logger.Warn("player %s try to login server %s", req.UserId, req.ServerId)
-	conMeta.ServerMeta = serverMeta
+	meta.ObjID = meta.ID.ToObjectID()
 
-	clients.Lock()
-	clients.Clients[conMeta.UserId] = conMeta
-	clients.Unlock()
-
+	mm.lock.Lock()
+	mm.connections[meta.ID] = meta
+	mm.lock.Unlock()
 	return true
 }
 
-func ClientLogout(conMeta *ClientConnectionMeta) bool {
-
-	clients.Lock()
-	delete(clients.Clients, conMeta.UserId)
-	clients.Unlock()
-
-	if conMeta.ClientConn != nil {
-		conMeta.ClientConn.Close()
+func (meta *ConnMeta) Send(b []byte) (int, error) {
+	if meta.Conn == nil {
+		return 0, errors.New("ConnMeta.Conn is nil")
 	}
 
-	conMeta.ClientConn = nil
+	n, err := meta.Conn.Write(b)
+	meta.SentByte += n
+	meta.SentNum += 1
 
-	return true
-}
-
-func getClientMeta(userId PlayerId) (*ClientConnectionMeta, bool) {
-	m, ok := clients.Clients[userId]
-	if ok {
-		return m, true
-	}
-	return nil, false
+	//todo
+	return n, err
 }

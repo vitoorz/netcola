@@ -1,12 +1,8 @@
 #!/bin/sh
 
 SCRIPT_NAME=$0
-TARGET_DIR_1_LEVEL_ABOVE=play
-
 SCRIPT_DIR=${SCRIPT_NAME%/*}
-PROTO_FILE=protocol.txt
-
-OUTPUT_FILE=
+cd ${SCRIPT_DIR}
 
 function doAwkAnalysis() {
 bash << EOF
@@ -35,35 +31,7 @@ bash << EOF
 EOF
 }
 
-#=======================================================
-#BEGIN TO PROCESS FILE
-#=======================================================
-
-#=======================================================
-# second: generate msg handler map for net
-#=======================================================
-cd ${SCRIPT_DIR}
-OUTPUT_FILE=handlermap.go
-PACKAGE=${TARGET_DIR_1_LEVEL_ABOVE}
-
-cat << EOF | tee ${OUTPUT_FILE}
-package ${PACKAGE}
-//Auto generated, do not modify unless you know clearly what you are doing.
-import . "types"
-
-type NetMsgHandler func(playerId IdString, opcode MsgType, content []byte ) interface{};
-
-type NetMsgCb struct{
-	OpCode  MsgType
-	RetCode MsgType
-	Handler NetMsgHandler
-	Desc    string
-}
-
-var NetMsgTypeHandler = map[MsgType]*NetMsgCb {
-EOF
-
-printFunction='function printACode(codeDesc){
+printFunctionMap='function printACode(codeDesc){
             action = codeDes["action"]
             if(action == "") {
                 if (codeDes["code"] != "") print("    //WARN: INVALID PROTO MAY EXIST HERE")
@@ -89,27 +57,7 @@ printFunction='function printACode(codeDesc){
             delete codeDesc
         }'
 
-doAwkAnalysis | tee -a ${OUTPUT_FILE}
-echo "}" | tee -a ${OUTPUT_FILE}
-mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/
-
-#=======================================================
-# third: generate msg handler for each net payload
-#=======================================================
-OUTPUT_FILE=handle.go
-
-cat << EOF | tee ${OUTPUT_FILE}
-package ${PACKAGE}
-//Auto generated, do not modify unless you know clearly what you are doing.
-
-import (
-	pb "github.com/golang/protobuf/proto"
-	. "types"
-)
-
-EOF
-
-printFunction='function printACode(codeDesc){
+printFunctionOn='function printACode(codeDesc){
             action = codeDes["action"]
             if(action == "") {
                 if (codeDes["code"] != "") print("    //WARN: INVALID PROTO MAY EXIST HERE")
@@ -128,36 +76,17 @@ printFunction='function printACode(codeDesc){
             }
 
             if(reaction == "Blank") {
-                printf("\nfunc On_%s(playerId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
-                printf("\treturn Play_InvalidReq(playerId, opCode, payLoad)\n}\n");
+                printf("\nfunc On_%s(objectId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
+                printf("\treturn Handle_InvalidReq(objectId, opCode, payLoad)\n}\n");
             } else {
-                printf("\nfunc On_%s(playerId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
+                printf("\nfunc On_%s(objectId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
                 printf("\treq :=&%s{}\n\tpb.Unmarshal(payLoad, req)\n", payload);
-                printf("\treturn Play_%s(playerId, opCode, req)\n}\n", action);
+                printf("\treturn Handle_%s(objectId, opCode, req)\n}\n", action);
             }
             delete codeDesc
         }'
 
-doAwkAnalysis | tee -a ${OUTPUT_FILE}
-mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/
-
-#=======================================================
-# fourth: generate msg handler for each net payload
-#=======================================================
-OUTPUT_FILE=handleplay.go
-
-cat << EOF | tee ${OUTPUT_FILE}
-package ${PACKAGE}
-//Auto generated, do not modify unless you know clearly what you are doing.
-
-import . "types"
-
-func Play_InvalidReq(playerId IdString, opCode MsgType, req interface{}) interface{} {
-	return getCommonAck(ERR_INVALID_REQ)
-}
-EOF
-
-printFunction='function printACode(codeDesc){
+ printFunctionHandle='function printACode(codeDesc){
            action = codeDes["action"]
             if(action  == "") {
                 if (codeDes["action"] != "") print("    //WARN: INVALID PROTO MAY EXIST HERE")
@@ -171,12 +100,84 @@ printFunction='function printACode(codeDesc){
             }
 
             if(codeDesc["reaction"] != "") {
-                printf("\nfunc Play_%s(playerId IdString, opCode MsgType, req *%s) interface{} {\n",action, payload);
+                printf("\nfunc Handle_%s(objectId IdString, opCode MsgType, req *%s) interface{} {\n",action, payload);
                 printf("\treturn nil\n}\n");
             }
 
             delete codeDesc
         }'
+#=======================================================
+#BEGIN TO PROCESS FILE
+#=======================================================
+todo_list=`ls *protocol.txt`
+for PROTO_FILE in ${todo_list}; do
+    #=======================================================
+    # generate msg handler map for net
+    #=======================================================
+    TARGET_DIR_1_LEVEL_ABOVE=`cat ${PROTO_FILE} | grep "package=" | awk -F= '{print $2}'`
+    OUTPUT_FILE=handlermap.go
+    PACKAGE=${TARGET_DIR_1_LEVEL_ABOVE##*/}
 
-doAwkAnalysis | tee -a ${OUTPUT_FILE}
-mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto
+cat << EOF | tee ${OUTPUT_FILE}
+package ${PACKAGE}
+//Auto generated, do not modify unless you know clearly what you are doing.
+import . "types"
+
+type NetMsgHandler func(objectId IdString, opcode MsgType, content []byte ) interface{};
+
+type NetMsgCb struct{
+	OpCode  MsgType
+	RetCode MsgType
+	Handler NetMsgHandler
+	Desc    string
+}
+
+var NetMsgTypeHandler = map[MsgType]*NetMsgCb {
+EOF
+
+    printFunction=${printFunctionMap}
+    doAwkAnalysis | tee -a ${OUTPUT_FILE}
+    echo "}" | tee -a ${OUTPUT_FILE}
+    mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/
+
+    #=======================================================
+    # second: generate msg handler for each net payload
+    #=======================================================
+    OUTPUT_FILE=handle.go
+
+cat << EOF | tee ${OUTPUT_FILE}
+package ${PACKAGE}
+//Auto generated, do not modify unless you know clearly what you are doing.
+
+import (
+	pb "github.com/golang/protobuf/proto"
+	. "types"
+)
+
+EOF
+
+    printFunction=${printFunctionOn}
+    doAwkAnalysis | tee -a ${OUTPUT_FILE}
+    mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/
+
+    #=======================================================
+    # third: generate msg handler for each net payload
+    #=======================================================
+    OUTPUT_FILE=handleplay.go
+
+cat << EOF | tee ${OUTPUT_FILE}
+package ${PACKAGE}
+//Auto generated, do not modify unless you know clearly what you are doing.
+
+import . "types"
+
+func Handle_InvalidReq(objectId IdString, opCode MsgType, req interface{}) interface{} {
+	return getCommonAck(ERR_INVALID_REQ)
+}
+EOF
+    printFunction=${printFunctionHandle}
+    doAwkAnalysis | tee -a ${OUTPUT_FILE}
+    echo "mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto"
+    mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto
+
+done

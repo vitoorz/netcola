@@ -1,5 +1,5 @@
-# go=gnetmsgtypes.go
-# package=play
+# go=innermsgtypes.go
+# package=gateway/manage
 # the line up is used for script, value after '=' should be set
 # <template> : code:   1, action: LoginReq, payload: LoginReq, reaction: 2,
 #              desc:   "player login request";
@@ -10,16 +10,8 @@
 # any lines not contains ':' can be used for help message, like the following new {
 # any kv should be end with ',' or ";"
 # a protocol message is defined begin with "code: ", and end by the next "code: "
-
 new {
-    code:   1, action: LoginReq, payload: LoginReq, reaction: LoginAck,
-    desc:   "player login request";
+    code: 1, action: ServerLoginReq, reaction: ServerLoginAck;
 
-    code:   2, action: LoginAck,
-    desc:   "player login ack from client";
-}
-
-new {
-    code:   3, action: LogoutReq, reaction: LogoutAck ,
-    code:   4, action: LogoutAck;
+    code: 2, action: ServerLoginAck;
 }

@@ -13,15 +13,17 @@ const (
 )
 
 type NetMsgHeadNoId struct {
-	OpCode   MsgType
-	Size     int32
+	MsgType
+	Size  int32
 }
-
 
 type NetMsgHead struct{
-	UserId   PlayerId
+	ObjectID
 	NetMsgHeadNoId
 }
+
+
+
 
 func (h *NetMsgHead) DecodeHead(head []byte) error {
 	r := bytes.NewReader(head)
@@ -59,9 +61,10 @@ type NetMsg struct {
 	payload    pb.Message
 }
 
-func NewNetMsg(userId PlayerId, code MsgType) *NetMsg {
-	msg := &NetMsg{NetMsgHead:NetMsgHead{UserId: userId}}
-	msg.OpCode = code;
+func NewNetMsg(objectId ObjectID, code MsgType) *NetMsg {
+	msg := &NetMsg{}
+	msg.MsgType  = code
+	msg.ObjectID = objectId
 
 	return msg
 }
@@ -86,16 +89,20 @@ func NewNetMsgFromHeadNoId(head []byte) (*NetMsg, error){
 	return msg, nil
 }
 
-func (msg *NetMsg) SetPayLoad(payLoad pb.Message) error {
+func (msg *NetMsg) SetPayLoad(code MsgType, payLoad pb.Message, flag uint32) error {
 	content, err := pb.Marshal(payLoad)
 	if err != nil {
-		logger.Error("marsh type %d payload %+v error : %s", msg.OpCode, payLoad, err.Error())
+		logger.Error("marsh type %d payload %+v error : %s", msg.TypeString(), payLoad, err.Error())
 		return err
 	}
 
 	msg.payload = payLoad
 	msg.Content = content
 	msg.Size    = int32(len(content))
+	if (msg.Size >> 16) != 0 {
+		flag |= NetMsgFlagLargeSize
+	}
+	msg.MsgType = AddMsgFlag(code, flag)
 
 	return nil
 }
@@ -116,6 +123,20 @@ func (msg *NetMsg) BinaryProtoNoId() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	binary = append(binary, msg.Content...)
+
+	return binary, nil
+}
+
+func (msg *NetMsg) BinaryProtoToClient() ([]byte, error) {
+	t := msg.MsgType
+	msg.MsgType = msg.Code()
+	binary, err := msg.EncodeHeadNoID()
+	if err != nil {
+		return nil, err
+	}
+	msg.MsgType = t
 
 	binary = append(binary, msg.Content...)
 

@@ -8,7 +8,7 @@ type DataMsg struct {
 	Sender   string
 	Receiver string
 	meta     map[string]interface{}
-	MsgType  int //? can it be integrated to meta?
+	MsgFlag  int //? can it be integrated to meta?
 	Payload  interface{}
 	Next     *DataMsg
 }
@@ -17,7 +17,7 @@ func NewDataMsg(sender, recv string, msgtype int, payload interface{}) *DataMsg 
 	var msg = &DataMsg{
 		Sender:   sender,
 		Receiver: recv,
-		MsgType:  msgtype,
+		MsgFlag:  msgtype,
 		meta:     make(map[string]interface{}),
 		Next:     nil,
 		Payload:  payload,

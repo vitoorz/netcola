@@ -4,13 +4,13 @@ import (
 	dm "library/core/datamsg"
 	"library/logger"
 	"net"
-	"types"
+	. "types"
 )
 
 //send ack back
 func (t *serverTCP) DataHandler(msg *dm.DataMsg) bool {
-	if msg.MsgType != types.Inner_MsgTypeS2G {
-		logger.Error("%s: recv invalid message type %d", t.Name, msg.MsgType)
+	if msg.MsgFlag != DataMsgFlagS2G {
+		logger.Error("%s: recv invalid message type %d", t.Name, msg.MsgFlag)
 		return false
 	}
 
