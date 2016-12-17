@@ -1,95 +1,101 @@
 package gatewayoutter
 
 import (
-	. "gateway/manage"
+	"game/com"
+	"game/gateway/gm"
 	pb "github.com/golang/protobuf/proto"
 	"library/logger"
+	"netmsghandle/gs"
 	. "types"
 )
 
-func forwardServerMessageToClient(serverMeta *ConnMeta, msg *NetMsg) bool {
-	clientMeta, ok := Clients.GetMeta(msg.ToIdString())
+func forwardServerMessageToClient(serverMeta *gm.ConnMeta, msg *NetMsg) bool {
+	opName := msg.TypeString()
+
+	clientMeta, ok := gm.Clients.GetMeta(msg.ToIdString())
 	if !ok || clientMeta.Conn == nil {
-		logger.Error("client connection for player %s is nil or serv", msg.ToIdString())
+		logger.Error("cs: MSG <%16s>: player %s connection not on", opName, msg.ToIdString())
 		return false
 	}
 
 	binary, err := msg.BinaryProtoToClient()
 	if err != nil {
-		logger.Error("encode net message to binary form error: %s", err.Error())
+		logger.Error("cs: MSG <%16s>: payload marshal error %s", opName, err.Error())
 		return false
 	}
 
-	n, err := clientMeta.Conn.Write(binary)
-	if err != nil {
-		Clients.Logout(clientMeta)
-		logger.Error("gateway: forward MSG <%16s> to player %s error: %s",
-			msg.TypeString(), clientMeta.ID, err.Error())
-		return false
-	} else {
-		logger.Info("gateway: foward MSG <%16s> to player %s success(%d/%d bytes)",
-			msg.TypeString(), clientMeta.ID, msg.Size, n)
-	}
-
-	return true
+	return clientMeta.CsToClient(opName, binary)
 }
 
 //gateway receives message from server (protocol between server & gateway)
-func handleServer2GatewayMessage(serverMeta *ConnMeta, msg *NetMsg) bool {
-	handler, ok := NetMsgTypeHandler[msg.Code()]
-	if !ok {
-		logger.Warn("message from server: code %s do not handler", msg.TypeString())
+func handleServer2GatewayMessage(serverMeta *gm.ConnMeta, msg *NetMsg) bool {
+	opName := msg.TypeString()
+	if msg.Code() == MT_ServerLoginReq {
+		gm.Servers.Login(serverMeta, msg.Content)
+	}
+
+	if msg.ObjectID != serverMeta.ID.ToObjectID() {
+		logger.Warn("gs: MSG <%16s>: meta server_id %s != %s in message head", opName, serverMeta.ID, msg.ToIdString())
 		return false
 	}
 
-	if msg.Code() == MT_ServerLoginReq {
-		Servers.Login(serverMeta, msg.Content)
+	handler, ok := gs.NetMsgTypeHandler[msg.Code()]
+	if !ok {
+		logger.Warn("gs: MSG <%16s>: server %s, handler not exist", opName, msg.ToIdString())
+		return false
 	}
 
-	opName := msg.TypeString()
 	ack := handler.Handler(msg.ToIdString(), msg.Code(), msg.Content)
 	if ack == nil {
-		logger.Info("ACK for REQ %s is nil, ID %s", opName, msg.ToIdString())
+		logger.Info("gs: MSG <%16s>: ACK <%16s> nil, ", opName, handler.RetCode.TypeString())
 		return true
 	}
 
 	pbAck, ok := ack.(pb.Message)
 	if !ok {
-		logger.Error("Ack payload for req %s invaliid, can not marshal with protobuf", msg.TypeString())
+		logger.Error("gs: MSG <%16s>: ACK <%16s> payload invalid", opName, handler.RetCode.TypeString())
 		return false
 	}
-	msg.SetPayLoad(handler.RetCode, pbAck, NetMsgIdFlagServer)
 
-	logger.Info("ACK for REQ %16s: ID %s, ack code %16s",
-		opName, msg.ToIdString(), msg.TypeString())
+	msg.SetPayLoad(handler.RetCode, pbAck, NetMsgIdFlagServer)
 
 	bin, err := msg.BinaryProto()
 	if err != nil {
-		logger.Error("Ack payload for req %s protobuf encode error %s", opName, err.Error())
+		logger.Error("gs: MSG <%16s>: payload marshal error %s", msg.TypeString(), err.Error())
 		return false
 	}
 
-	n, err := serverMeta.Send(bin)
-	if err != nil {
-		Servers.Logout(serverMeta)
-		logger.Error("gateway: froward MSG <%16s> to server %s error: %s",
-			msg.TypeString(), serverMeta.ID, err.Error())
-		return false
-	} else {
-		logger.Info("gateway: forward MSG <%16s> to server %s success (%d/%d bytes)",
-			msg.TypeString(), serverMeta.ID, msg.Size, n)
-	}
-
-	return true
+	return serverMeta.GsToServer(opName, msg.TypeString(), bin)
 }
 
-func distributeBroadCastMessageToClients(serverMeta *ConnMeta, msg *NetMsg) bool {
+func distributeBroadCastMessageToClients(serverMeta *gm.ConnMeta, msg *NetMsg) bool {
+	opName := msg.TypeString()
+	grp, ok := com.FindBrdCastGroup(serverMeta.ID, msg.ObjectID.ToIdString())
+	if !ok {
+		logger.Error("brdcast: MSG: <%16s>, group %s not found", opName, msg.ToIdString())
+		return false
+	}
+
+	binary, err := msg.BinaryProtoToClient()
+	if err != nil {
+		logger.Error("brdcast: MSG: <%16s>, payload marshal error %s", opName, err.Error())
+		return false
+	}
+
+	for playerId := range grp.Members {
+		clientMeta, ok := gm.Clients.GetMeta(playerId)
+		if !ok || clientMeta.Conn == nil {
+			logger.Error("brdcast: MSG <%16s>, player %s meta not valid", opName, playerId)
+			continue
+		}
+		clientMeta.BroadCastSendClient(opName, binary)
+	}
 
 	return true
 }
 
 //server ack/heartbeat message, forward to client without userId
-func HandleMessageFromServer(serverMeta *ConnMeta, msg *NetMsg) bool {
+func HandleMessageFromServer(serverMeta *gm.ConnMeta, msg *NetMsg) bool {
 	//server message for
 	switch {
 	case msg.HasFlag(NetMsgIdFlagClient):

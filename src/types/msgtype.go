@@ -35,11 +35,11 @@ func (t MsgType) HasFlag(flag uint32) bool {
 func (mt MsgType) TypeString() string {
     switch {
     case mt.HasFlag(NetMsgIdFlagClient) || mt == 0:
-        return "client: " + gnetmsgtypesNames[mt.Code()]
+        return "cs: " + csmsgtypesNames[mt.Code()]
     case mt.HasFlag(NetMsgIdFlagServer):
-        return "server: " + innermsgtypesNames[mt.Code()]
+        return "gs: " + gsmsgtypesNames[mt.Code()]
     case mt.HasFlag(NetMsgIdFlagBroadCast):
-        return "broadcast: " + innermsgtypesNames[mt.Code()]
+        return "brd: " + csmsgtypesNames[mt.Code()]
     }
 
     return fmt.Sprintf("message with invalid flag: value 0x%x", mt)

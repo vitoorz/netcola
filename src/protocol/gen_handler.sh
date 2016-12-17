@@ -75,18 +75,13 @@ printFunctionOn='function printACode(codeDesc){
                 payload = action
             }
 
-            if(reaction == "Blank") {
-                printf("\nfunc On_%s(objectId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
-                printf("\treturn Handle_InvalidReq(objectId, opCode, payLoad)\n}\n");
-            } else {
-                printf("\nfunc On_%s(objectId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
-                printf("\treq :=&%s{}\n\tpb.Unmarshal(payLoad, req)\n", payload);
-                printf("\treturn Handle_%s(objectId, opCode, req)\n}\n", action);
-            }
+            printf("\nfunc On_%s(objectId IdString, opCode MsgType, payLoad []byte) interface{} {\n",action);
+            printf("\treq := &%s{}\n\tpb.Unmarshal(payLoad, req)\n", payload);
+            printf("\treturn Handle_%s(objectId, opCode, req)\n}\n", action);
             delete codeDesc
         }'
 
- printFunctionHandle='function printACode(codeDesc){
+ printFunctionHandleReq='function printACode(codeDesc){
            action = codeDes["action"]
             if(action  == "") {
                 if (codeDes["action"] != "") print("    //WARN: INVALID PROTO MAY EXIST HERE")
@@ -101,6 +96,27 @@ printFunctionOn='function printACode(codeDesc){
 
             if(codeDesc["reaction"] != "") {
                 printf("\nfunc Handle_%s(objectId IdString, opCode MsgType, req *%s) interface{} {\n",action, payload);
+                printf("\treturn nil\n}\n");
+            }
+
+            delete codeDesc
+        }'
+
+ printFunctionHandleAck='function printACode(codeDesc){
+           action = codeDes["action"]
+            if(action  == "") {
+                if (codeDes["action"] != "") print("    //WARN: INVALID PROTO MAY EXIST HERE")
+                delete codeDesc
+                return
+            }
+
+            payload = codeDesc["payload"]
+            if(payload  == "") {
+                payload = action
+            }
+
+            if(codeDesc["reaction"] == "") {
+                printf("\nfunc Handle_%s(objectId IdString, opCode MsgType, ack *%s) interface{} {\n",action, payload);
                 printf("\treturn nil\n}\n");
             }
 
@@ -152,32 +168,41 @@ package ${PACKAGE}
 import (
 	pb "github.com/golang/protobuf/proto"
 	. "types"
-)
-
 EOF
+    cat ${PROTO_FILE} | grep "gamedealer" | awk -F= '{split($2, ps, " "); for(idx in ps) printf("    . \"%s\"\n"), ps[idx]}'| tee -a ${OUTPUT_FILE}
+    echo ")" | tee -a ${OUTPUT_FILE}
 
     printFunction=${printFunctionOn}
     doAwkAnalysis | tee -a ${OUTPUT_FILE}
     mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/
 
     #=======================================================
-    # third: generate msg handler for each net payload
+    # third: generate msg handler for each req payload
     #=======================================================
-    OUTPUT_FILE=handleplay.go
+    OUTPUT_FILE=handlereq.go
 
 cat << EOF | tee ${OUTPUT_FILE}
 package ${PACKAGE}
 //Auto generated, do not modify unless you know clearly what you are doing.
-
 import . "types"
-
-func Handle_InvalidReq(objectId IdString, opCode MsgType, req interface{}) interface{} {
-	return getCommonAck(ERR_INVALID_REQ)
-}
 EOF
-    printFunction=${printFunctionHandle}
+    printFunction=${printFunctionHandleReq}
     doAwkAnalysis | tee -a ${OUTPUT_FILE}
     echo "mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto"
     mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto
 
+    #=======================================================
+    # fourth: generate msg handler for each ack payload
+    #=======================================================
+    OUTPUT_FILE=handleack.go
+
+cat << EOF | tee ${OUTPUT_FILE}
+package ${PACKAGE}
+//Auto generated, do not modify unless you know clearly what you are doing.
+import . "types"
+EOF
+    printFunction=${printFunctionHandleAck}
+    doAwkAnalysis | tee -a ${OUTPUT_FILE}
+    echo "mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto"
+    mv ${OUTPUT_FILE} ../${TARGET_DIR_1_LEVEL_ABOVE}/${OUTPUT_FILE}.auto
 done

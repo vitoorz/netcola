@@ -1,6 +1,7 @@
 package servertcp
 
 import (
+	"game/server/play"
 	dm "library/core/datamsg"
 	"library/logger"
 	"net"
@@ -26,20 +27,29 @@ func (t *serverTCP) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	//todo: need to verify if the data payload is []byte
-	content, ok := msg.Payload.([]byte)
+	sendLists := play.AsyncSender.GetAsyncNetMessages()
+	nm, ok := msg.Payload.(*NetMsg)
 	if !ok {
-		logger.Error("%s: payload is not in form []byte,", t.Name)
-		return false
+		logger.Error("%s: payload %s not type of NetMsg", t.Name)
+	} else {
+		sendLists = append(sendLists, nm)
 	}
 
-	count, err := connection.Write(content)
-	if err != nil {
-		logger.Warn("%s:conn write err:%s", t.Name, err.Error())
-		connection.Close()
-		return false
-	} else {
-		logger.Info("%s:sent to network:%d byte", t.Name, count)
+	for _, nm = range sendLists {
+		content, err := nm.BinaryProto()
+		if err != nil {
+			logger.Warn("%s:netmsg poylad %s marshal error: %s", nm.TypeString(), err.Error())
+			continue
+		}
+
+		count, err := connection.Write(content)
+		if err != nil {
+			logger.Warn("%s:conn write err:%s", t.Name, err.Error())
+			connection.Close()
+			return false
+		} else {
+			logger.Info("%s:sent to network: %s (%d byte)", t.Name, nm.TypeString(), count)
+		}
 	}
 
 	return true

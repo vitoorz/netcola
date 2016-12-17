@@ -23,8 +23,6 @@ type NetMsgHead struct{
 }
 
 
-
-
 func (h *NetMsgHead) DecodeHead(head []byte) error {
 	r := bytes.NewReader(head)
 

@@ -1,14 +1,16 @@
 package serverhandle
 
 import (
-	gateway "gateway/manage"
+	"game/gateway/gm"
+	"game/server/play"
 	pb "github.com/golang/protobuf/proto"
 	"library/logger"
-	"server/play"
+	"netmsghandle/cs"
+	"netmsghandle/gs"
 	. "types"
 )
 
-func HandleMessageFromGateway(payload *NetMsg) interface{} {
+func HandleMessageFromGateway(payload *NetMsg) (interface{}, bool) {
 	var (
 		ack     interface{} = nil
 		ackCode MsgType
@@ -24,31 +26,35 @@ func HandleMessageFromGateway(payload *NetMsg) interface{} {
 	case payload.HasFlag(NetMsgIdFlagClient):
 		ack, ackCode = playHandler(payload)
 		msgFlag = NetMsgIdFlagClient
+	case payload.HasFlag(NetMsgIdFlagBroadCast):
+		ack, ackCode = serverHandler(payload)
+		msgFlag = NetMsgIdFlagBroadCast
 	}
 
 	if ack == nil {
 		logger.Info("ACK for MSG %s is nil, ID %s", opName, payload.ToIdString())
-		return nil
+		return nil, true
 	}
 
 	pbAck, ok := ack.(pb.Message)
 	if !ok {
 		logger.Error("Ack for MSG %s: %s invaliid, can not marshal with protobuf", opName, ackCode.TypeString())
-		return false
+		return nil, false
 	}
 
 	payload.SetPayLoad(ackCode, pbAck, msgFlag)
+
 	logger.Info("ACK for MSG %16s: ID %s, ack code %16s", opName, payload.ToIdString(), payload.TypeString())
-	return ack
+	return ack, true
 }
 
 //Message from client
 func playHandler(payload *NetMsg) (interface{}, MsgType) {
 	play.PlayFrame.SetFrameTime()
 
-	handler, ok := play.NetMsgTypeHandler[payload.Code()]
+	handler, ok := cs.NetMsgTypeHandler[payload.Code()]
 	if !ok {
-		logger.Info("PlayHandler get invalid payload type %d", payload.TypeString())
+		logger.Info("PlayHandler get invalid payload type %s", payload.TypeString())
 		return nil, MT_Blank
 	}
 
@@ -59,9 +65,9 @@ func playHandler(payload *NetMsg) (interface{}, MsgType) {
 
 //message from gateway
 func serverHandler(payload *NetMsg) (interface{}, MsgType) {
-	gateway.GateWayFrame.SetFrameTime()
+	gm.GatewayFrame.SetFrameTime()
 
-	handler, ok := gateway.NetMsgTypeHandler[payload.Code()]
+	handler, ok := gs.NetMsgTypeHandler[payload.Code()]
 	if !ok {
 		logger.Info("ServerHandler get invalid payload type %d", payload.TypeString())
 		return nil, MT_Blank

@@ -1,7 +1,7 @@
 package gatewayoutter
 
 import (
-	. "gateway/manage"
+	"game/gateway/gm"
 	dm "library/core/datamsg"
 	"library/logger"
 	. "types"
@@ -20,7 +20,7 @@ func (t *gatewayOutter) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	serverMeta, ok := meta.(*ConnMeta)
+	serverMeta, ok := meta.(*gm.ConnMeta)
 	if !ok {
 		logger.Error("%s:wrong meta in datamsg(should be *ClientConnectionMeta):%+v", t.Name, meta)
 		return false

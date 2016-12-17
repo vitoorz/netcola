@@ -19,12 +19,10 @@ func (t *serverHandle) DataHandler(msg *dm.DataMsg) bool {
 		return false
 	}
 
-	ack := HandleMessageFromGateway(payload)
-
+	ack, _ := HandleMessageFromGateway(payload)
 	msg.Receiver = msg.Sender
 	msg.Sender = ServiceName
 	if ack != nil && msg.Receiver != dm.NoReceiver {
-		msg.Payload, _ = payload.BinaryProto()
 		msg.MsgFlag = DataMsgFlagS2G
 		t.Output.WritePipeNoBlock(msg)
 	}

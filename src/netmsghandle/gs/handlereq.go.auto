@@ -1,0 +1,23 @@
+package gs
+//Auto generated, do not modify unless you know clearly what you are doing.
+import . "types"
+
+func Handle_ServerLoginReq(objectId IdString, opCode MsgType, req *ServerLoginReq) interface{} {
+	return nil
+}
+
+func Handle_BrdCastAddMemberReq(objectId IdString, opCode MsgType, req *BrdCastGroupManageReq) interface{} {
+	return nil
+}
+
+func Handle_BrdCastDelMemberReq(objectId IdString, opCode MsgType, req *BrdCastGroupManageReq) interface{} {
+	return nil
+}
+
+func Handle_BrdCastDestroyReq(objectId IdString, opCode MsgType, req *BrdCastGroupManageReq) interface{} {
+	return nil
+}
+
+func Handle_BrdCastSyncReq(objectId IdString, opCode MsgType, req *BrdCastGroupManageReq) interface{} {
+	return nil
+}

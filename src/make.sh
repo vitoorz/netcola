@@ -9,11 +9,11 @@ formatCode() {
 
 building() {
     printf "\nstart building $1..."
-    cd $ProjectPath/src/$1
+    cd $ProjectPath/src/game/$1
 
     if $2;then
         printf "format $1 codes..."
-        formatCode $ProjectPath/src/$1
+        formatCode $ProjectPath/src/game/$1
     fi
 
     [ -f $1 ] && rm $1

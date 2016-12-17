@@ -2,10 +2,10 @@ package syswatcher
 
 import (
 	cm "library/core/controlmsg"
-	"library/idgen"
 	"library/logger"
 	"service"
 	"time"
+	"types"
 )
 
 //singleton service routine to provide both tick service, and provide watch time consumption of procedure object
@@ -23,7 +23,7 @@ type tickBooker struct {
 }
 
 type watcherType struct {
-	tickerBooker map[idgen.ObjectID]*tickBooker //ID, should have a method to find service by unique id
+	tickerBooker map[types.ObjectID]*tickBooker //ID, should have a method to find service by unique id
 	watchObject  map[string]int64               //key: object unique identifier, value: start watch timestamp
 	cmd          chan *watchCmd
 }
@@ -35,7 +35,7 @@ type watchCmd struct {
 
 func NewWatcher() *watcherType {
 	return &watcherType{
-		tickerBooker: make(map[idgen.ObjectID]*tickBooker),
+		tickerBooker: make(map[types.ObjectID]*tickBooker),
 		watchObject:  make(map[string]int64, 0),
 		cmd:          make(chan *watchCmd, 0),
 	}

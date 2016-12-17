@@ -1,7 +1,7 @@
 package gatewayoutter
 
 import (
-	. "gateway/manage"
+	"game/gateway/gm"
 	"io"
 	cm "library/core/controlmsg"
 	dm "library/core/datamsg"
@@ -61,7 +61,7 @@ func (t *gatewayOutter) gatewayClient() {
 }
 
 func (t *gatewayOutter) gatewayClientConn(connection *net.TCPConn) {
-	clientMeta := NewClientMeta(connection)
+	clientMeta := gm.NewClientMeta(connection)
 
 	for clientMeta.Conn != nil {
 		head := make([]byte, NetMsgHeadNoIdSize)
@@ -69,7 +69,7 @@ func (t *gatewayOutter) gatewayClientConn(connection *net.TCPConn) {
 		if err != nil {
 			logger.Error("%s: read player %s req head[NOID] error: %s",
 				t.Name, clientMeta.ID, err.Error())
-			Clients.Logout(clientMeta)
+			gm.Clients.Logout(clientMeta)
 			break
 		}
 
@@ -77,7 +77,7 @@ func (t *gatewayOutter) gatewayClientConn(connection *net.TCPConn) {
 		if err != nil {
 			logger.Error("%s:decode player %s req head(NOID) error: %s",
 				t.Name, clientMeta.ID, err.Error())
-			Clients.Logout(clientMeta)
+			gm.Clients.Logout(clientMeta)
 			break
 		}
 
@@ -87,7 +87,7 @@ func (t *gatewayOutter) gatewayClientConn(connection *net.TCPConn) {
 		if err != nil {
 			logger.Error("%s: read player %s req [%s] payload error",
 				t.Name, clientMeta.ID, msg.TypeString())
-			Clients.Logout(clientMeta)
+			gm.Clients.Logout(clientMeta)
 			break
 		}
 

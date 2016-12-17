@@ -10,6 +10,7 @@ const (
 	DataMsgFlagG2C      = 2
 	DataMsgFlagG2S      = 3
 	DataMsgFlagS2G      = 4
+	DataMsgFlagAsync     = 5
 )
 
 //unix timestamp

@@ -1,0 +1,27 @@
+package gs
+//Auto generated, do not modify unless you know clearly what you are doing.
+import . "types"
+
+func Handle_ServerLoginAck(objectId IdString, opCode MsgType, ack *ServerLoginAck) interface{} {
+	return nil
+}
+
+func Handle_ServerLoginOutReq(objectId IdString, opCode MsgType, ack *ServerLoginOutReq) interface{} {
+	return nil
+}
+
+func Handle_BrdCastAddMemberAck(objectId IdString, opCode MsgType, ack *BrdCastGroupManageAck) interface{} {
+	return nil
+}
+
+func Handle_BrdCastDelMemberAck(objectId IdString, opCode MsgType, ack *BrdCastGroupManageAck) interface{} {
+	return nil
+}
+
+func Handle_BrdCastDestroyAck(objectId IdString, opCode MsgType, ack *BrdCastGroupManageAck) interface{} {
+	return nil
+}
+
+func Handle_BrdCastSyncAck(objectId IdString, opCode MsgType, ack *BrdCastGroupManageAck) interface{} {
+	return nil
+}

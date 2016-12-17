@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+//all message between server and gateway, ID in NetMsg head is set to server_id
+//no need to add server_id in message real payload
+//REQ is sent by server, processed by gateway; ACK is the opposite
+
+message ServerCommonAck {
+    int32  err_code = 1;
+}
+
+message ServerLoginReq {
+    string server_id = 1;
+    string server_name = 2;
+}
+
+message ServerLoginAck {
+    ServerCommonAck common = 1;
+    int32 status = 2;
+}
+
+message ServerLoginOutReq {
+    int32  status = 1;
+}
+
+message BrdCastGroupManageReq { //Add, Del, Sync, Destroy
+    string group_id = 1;
+    repeated string member_ids = 2;
+}
+
+message BrdCastGroupManageAck {
+    ServerCommonAck common = 1;
+    string group_id = 2;
+    int32  member_num = 3; //for check
+
+}
+

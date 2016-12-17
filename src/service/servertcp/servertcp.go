@@ -18,6 +18,7 @@ type serverTCP struct {
 	listener *net.TCPListener
 	ip       string
 	port     string
+	GS       net.Conn
 }
 
 func NewServerTCP(name, ip, port string) *serverTCP {
