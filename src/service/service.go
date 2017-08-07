@@ -54,6 +54,7 @@ func (t *Service) Background() {
 				next, _ = t.Instance.ControlHandler(msg)
 			}
 			break
+		//read data from service's own DataMsgPipe
 		case msg, ok := <-t.ReadPipe():
 			if !ok {
 				logger.Info("%s:Data Read error", t.Name)

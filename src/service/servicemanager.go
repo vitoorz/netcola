@@ -8,8 +8,8 @@ import (
 
 //the only service manager instance in process, will maintain all service instance
 var ServicePool = &ServiceManager{
-	services: make(map[string]*serviceSeries, 0),
-	byId:     make(map[ObjectID]IService, 0),
+	services: make(map[string]*serviceSeries, 0), //key:name,value:service objects
+	byId:     make(map[ObjectID]IService, 0),     // index service by service id
 }
 
 //Service with the same name, will have the same function
@@ -32,6 +32,7 @@ func (t *ServiceManager) Service(name string) (IService, bool) {
 	//should have strategy to sample from multiple instance
 	sList, ok := t.services[name]
 	if ok {
+		//todo: maybe need a load balancer here
 		for _, s := range sList.Lists {
 			return s, true
 		}
@@ -40,11 +41,13 @@ func (t *ServiceManager) Service(name string) (IService, bool) {
 	return nil, ok
 }
 
+// get service object by id index
 func (t *ServiceManager) ServiceById(id ObjectID) (IService, bool) {
 	s, ok := t.byId[id]
 	return s, ok
 }
 
+// return all the service name
 func (t *ServiceManager) NameList() (list []string) {
 	for name := range t.services {
 		list = append(list, name)
@@ -68,14 +71,14 @@ func (t *ServiceManager) register(service IService) error {
 
 func StartService(s IService, bus *dm.DataMsgPipe) bool {
 	logger.Info("start service:host:%v,instance:%+v", s.Self().Name, s.Self().Instance)
-	parent := s.Self()
+	instance := s.Self()
 	if s.Start(bus) {
 		ServicePool.register(s)
-		go parent.Background()
-		go parent.Buffer.Daemon()
+		go instance.Background()
+		go instance.Buffer.Daemon()
 		return true
 	} else {
-		logger.Error("start service %s failed", parent.Name)
+		logger.Error("start service %s failed", instance.Name)
 		return false
 	}
 }
