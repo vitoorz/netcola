@@ -28,7 +28,10 @@ building() {
 main() {
     echo "formating lib/service/types/tool:"
     formatCode "$ProjectPath/src/library"
+    formatCode "$ProjectPath/src/module"
     formatCode "$ProjectPath/src/service"
+    formatCode "$ProjectPath/src/server"
+    formatCode "$ProjectPath/src/types"
     building "server" true
 }
 

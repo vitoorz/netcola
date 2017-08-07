@@ -6,5 +6,5 @@ import (
 
 type Event struct {
 	TimerObject *time.Timer
-	When int64
+	When        int64
 }
